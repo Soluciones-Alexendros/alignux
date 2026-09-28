@@ -32,12 +32,12 @@ jobs:
           python3 -m json.tool app/status.json > /dev/null
           python3 tools/status-validate.py app/status.json tools/status.schema.json
 
-      - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4
+      - name: Setup Node.js
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4
         with:
           node-version: "22"
           cache: "npm"
           cache-dependency-path: "app/package-lock.json"
-        working-directory: ./app
 
       - name: Build Astro site
         working-directory: ./app

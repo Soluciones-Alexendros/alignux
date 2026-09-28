@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ALIGNUX status.json",
+  "type": "object",
+  "required": [
+    "generated_at", "data_fresh", "phase_current", "gates",
+    "tasks", "ci", "milestones", "risks_active", "pin"
+  ],
+  "properties": {
+    "generated_at": { "type": "string", "format": "date-time" },
+    "data_fresh": { "type": "boolean" },
+    "last_good_at": { "type": ["string", "null"] },
+    "phase_current": { "type": "string" },
+    "gates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "state"],
+        "properties": {
+          "id": { "type": "string" },
+          "state": { "enum": ["current", "pending", "passed"] }
+        }
+      }
+    },
+    "tasks": {
+      "type": "object",
+      "required": ["total", "must", "should", "could", "by_phase"],
+      "properties": {
+        "total": { "type": "integer" },
+        "must": { "type": "integer" },
+        "should": { "type": "integer" },
+        "could": { "type": "integer" },
+        "by_phase": { "type": "object", "additionalProperties": { "type": "integer" } }
+      }
+    },
+    "ci": {
+      "type": "object",
+      "required": ["main", "nightly", "last_run"],
+      "properties": {
+        "main": {
+          "type": ["object", "null"],
+          "properties": {
+            "status": { "type": "string" },
+            "last_run": { "type": "string" },
+            "url": { "type": "string" }
+          }
+        },
+        "nightly": {
+          "type": ["object", "null"],
+          "properties": {
+            "status": { "type": "string" },
+            "last_run": { "type": "string" },
+            "url": { "type": "string" }
+          }
+        },
+        "last_run": { "type": ["string", "null"] }
+      }
+    },
+    "milestones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "due", "open", "closed"],
+        "properties": {
+          "id": { "type": "string" },
+          "due": { "type": "string" },
+          "open": { "type": "integer" },
+          "closed": { "type": "integer" }
+        }
+      }
+    },
+    "risks_active": { "type": "integer" },
+    "pin": {
+      "type": "object",
+      "required": ["sel4", "microkit", "rust_sel4"],
+      "properties": {
+        "sel4": { "type": ["string", "null"] },
+        "microkit": { "type": ["string", "null"] },
+        "rust_sel4": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

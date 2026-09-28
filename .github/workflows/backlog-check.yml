@@ -1,0 +1,46 @@
+name: Backlog check
+
+on:
+  schedule:
+    - cron: "0 3 * * 1" # lunes 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: backlog-check
+  cancel-in-progress: true
+
+jobs:
+  backlog-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Verificar integridad del backlog
+        id: check
+        run: |
+          set -o pipefail
+          python3 tools/backlog-check.py 2>&1 | tee /tmp/backlog-report.txt
+
+      - name: Abrir issue si hay violaciones
+        if: failure()
+        run: |
+          EXISTING=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "backlog-check violaciones" --json number --jq 'length')
+          if [ "$EXISTING" = "0" ]; then
+            gh issue create --repo "$GITHUB_REPOSITORY" \
+              --title "cadena-rota: backlog-check detectó violaciones de integridad" \
+              --label "cadena-rota" \
+              --body "$(printf 'El chequeo semanal de integridad del backlog ha fallado.\\n\\nRun: %s\\n\\n```\\n' "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID")$(cat /tmp/backlog-report.txt)$(printf '\\n```')"
+          else
+            echo "Ya existe un issue abierto de backlog-check; no se duplica."
+          fi

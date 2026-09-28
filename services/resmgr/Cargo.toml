@@ -5,6 +5,5 @@ edition = "2021"
 publish = false
 
 [dependencies]
-rust-sel4 = { workspace = true }
 
 # Placeholder M0: el gestor de recursos (PCI/ACPI) real se implementa en T1-04.

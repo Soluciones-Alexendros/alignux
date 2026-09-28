@@ -12,8 +12,9 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 rust-version = "1.97"
 
-[workspace.dependencies]
-rust-sel4 = "=5.0.0"
+# rust-sel4 5.0.0 se añade como dependencia git en T0-05 (plantilla PD no_std),
+# cuando `tools/sdk-fetch.sh` dispone el SDK. No está publicado en crates.io.
+# El pin oficial vive en VERSIONS.toml y docs/01-arquitectura.md.
 
 [profile.release]
 opt-level = 2

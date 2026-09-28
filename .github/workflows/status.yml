@@ -30,6 +30,7 @@ jobs:
         run: |
           python3 tools/status-export.py --out app/status.json
           python3 -m json.tool app/status.json > /dev/null
+          python3 tools/status-validate.py app/status.json tools/status.schema.json
 
       - name: Publicar en rama gh-pages
         env:

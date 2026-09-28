@@ -13,3 +13,6 @@ sdk/
 
 # status.json se genera en CI (status.yml) y se publica en gh-pages; no se versiona en main
 /app/status.json
+
+# playwright MCP local state
+.playwright-mcp/

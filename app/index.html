@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%2300d9a3'/%3E%3Ccircle cx='8' cy='8' r='2.6' fill='%230a0a0a'/%3E%3C/svg%3E">
 <style>
 :root{
   --bg:#0a0a0a; --panel:#121212; --panel2:#1a1a1a; --border:#262626;
@@ -32,9 +33,11 @@ nav.tabs{display:flex;gap:4px;margin-top:20px;overflow-x:auto;flex-wrap:wrap}
 main{padding:32px 0 80px}
 section.panel{display:none}
 section.panel[data-active="true"]{display:block}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 h1{font-family:var(--head);font-size:1.7rem;font-weight:600;letter-spacing:-.01em;margin-bottom:8px}
-h2{font-family:var(--head);font-size:1.15rem;font-weight:600;margin:28px 0 12px;color:var(--txt)}
-h3{font-family:var(--head);font-size:1rem;font-weight:600;margin:16px 0 8px}
+h2{font-family:var(--head);font-size:1.7rem;font-weight:600;letter-spacing:-.01em;margin-bottom:8px;color:var(--txt)}
+h3{font-family:var(--head);font-size:1.15rem;font-weight:600;margin:28px 0 12px;color:var(--txt)}
+h4{font-family:var(--head);font-size:1rem;font-weight:600;margin:16px 0 8px}
 p{margin:8px 0;color:#c9c9c9}
 .lead{font-size:1.05rem;color:#d6d6d6}
 .muted{color:var(--muted)}
@@ -43,7 +46,7 @@ code{font-family:var(--mono);font-size:.85em;background:#1e1e1e;padding:1px 6px;
 .g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
 .g3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
 .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px}
-.card h3{margin-top:0}
+.card h4{margin-top:0}
 .badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.8rem;padding:4px 10px;border-radius:999px;border:1px solid var(--border)}
 .badge.ok{color:var(--accent);border-color:#0f3b2f;background:#0c221b}
 .badge.bad{color:var(--bad);border-color:#3b1210;background:#22100e}
@@ -75,7 +78,7 @@ ul.list li{margin:6px 0;color:#c9c9c9}
 .kv .v{font-family:var(--mono)}
 a.card-link{display:block;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;transition:border-color .15s}
 a.card-link:hover{border-color:var(--accent);text-decoration:none}
-a.card-link h3{color:var(--txt)}
+a.card-link h4{color:var(--txt)}
 footer{border-top:1px solid var(--border);padding:24px 0;color:var(--muted);font-family:var(--mono);font-size:.78rem}
 </style>
 </head>
@@ -98,34 +101,35 @@ footer{border-top:1px solid var(--border);padding:24px 0;color:var(--muted);font
 </header>
 
 <main class="wrap">
+  <h1 class="sr-only">ALIGNUX — Estado del proyecto</h1>
   <div id="aviso" class="banner" hidden></div>
 
   <!-- ESTADO -->
   <section class="panel" data-active="true" id="panel-estado" role="tabpanel" aria-labelledby="tab-estado">
-    <h1>Un sistema operativo nuevo, sobre el núcleo mejor probado del mundo</h1>
+    <h2>Un sistema operativo nuevo, sobre el núcleo mejor probado del mundo</h2>
     <p class="lead">ALIGNUX reconstruye la capa de servicios de un sistema operativo desde cero, apoyándose en el microkernel <strong>seL4</strong> y en su verificación formal, para devolver al usuario el control de sus datos y de su máquina.</p>
     <div id="estado-dinamico"><p class="muted">Cargando datos…</p></div>
-    <h2>Mapa de verificación formal (septiembre de 2026)</h2>
+    <h3>Mapa de verificación formal (septiembre de 2026)</h3>
     <p>La corrección funcional de seL4 está verificada en <strong>x86-64 sin MCS</strong>. La configuración MCS está verificada solo en <strong>RISC-V</strong> (Proofcraft, 2026). ALIGNUX usa seL4 16.0.0 en una configuración concreta; no afirma una verificación que no le corresponde.</p>
     <div class="grid g3" style="margin-top:12px">
-      <div class="card"><h3>x86-64 · sin MCS</h3><span class="badge ok">verificado</span><p class="muted">Base del MVP en QEMU.</p></div>
-      <div class="card"><h3>RISC-V · MCS</h3><span class="badge ok">verificado (2026)</span><p class="muted">Referencia de la planificación MCS.</p></div>
-      <div class="card"><h3>x86-64 · MCS</h3><span class="badge bad">sin verificar</span><p class="muted">Configuración de ejecución; se comunica sin ambigüedad.</p></div>
+      <div class="card"><h4>x86-64 · sin MCS</h4><span class="badge ok">verificado</span><p class="muted">Base del MVP en QEMU.</p></div>
+      <div class="card"><h4>RISC-V · MCS</h4><span class="badge ok">verificado (2026)</span><p class="muted">Referencia de la planificación MCS.</p></div>
+      <div class="card"><h4>x86-64 · MCS</h4><span class="badge bad">sin verificar</span><p class="muted">Configuración de ejecución; se comunica sin ambigüedad.</p></div>
     </div>
   </section>
 
   <!-- ARQUITECTURA -->
   <section class="panel" id="panel-arquitectura" role="tabpanel" aria-labelledby="tab-arquitectura">
-    <h1>Arquitectura: mecanismos dentro, políticas fuera</h1>
+    <h2>Arquitectura: mecanismos dentro, políticas fuera</h2>
     <p>El kernel ofrece mecanismos (capacidades, IPC, programación); ALIGNUX define las políticas en servicios de espacio de usuario, cada uno en su propio dominio de protección (PD).</p>
-    <h2>La pila, de arriba abajo</h2>
+    <h3>La pila, de arriba abajo</h3>
     <ul class="list">
       <li><strong>seL4 16.0.0</strong> — microkernel con capacidades y programación MCS.</li>
       <li><strong>Microkit 2.3.1</strong> — composición de PDs (SDF, asignación de recursos).</li>
       <li><strong>Servicios Rust <code>no_std</code></strong> — memgr, namesrv, resmgr, vfs, drv_block, shell.</li>
       <li><strong>Adaptadores auditados en C</strong> — init, drv_uart.</li>
     </ul>
-    <h2>Los ocho dominios de protección del MVP</h2>
+    <h3>Los ocho dominios de protección del MVP</h3>
     <table>
       <thead><tr><th>Dominio</th><th>Lenguaje</th><th>Rol</th></tr></thead>
       <tbody>
@@ -139,13 +143,13 @@ footer{border-top:1px solid var(--border);padding:24px 0;color:var(--muted);font
         <tr><td><code>drv_uart</code></td><td>C (auditado)</td><td>Consola serie (patrón sDDF).</td></tr>
       </tbody>
     </table>
-    <h2>Tres reglas que no se negocian</h2>
+    <h3>Tres reglas que no se negocian</h3>
     <ul class="list">
       <li><strong>Los nombres no conceden autoridad.</strong> Solo las capacidades otorgan acceso.</li>
       <li><strong>Todo servidor pasivo ejecuta con el scheduling context donado por su cliente.</strong></li>
       <li><strong>Drivers «IOMMU-first».</strong> Todo DMA declara su <code>&lt;io_address_space&gt;</code> (ADR-06).</li>
     </ul>
-    <h2>Lo que ALIGNUX no es (todavía)</h2>
+    <h3>Lo que ALIGNUX no es (todavía)</h3>
     <ul class="list">
       <li>No hay GUI antes de M4 (W-01).</li>
       <li>No hay POSIX nativo (W-02); la compatibilidad será un servidor/VM aislada en M5.</li>
@@ -156,7 +160,7 @@ footer{border-top:1px solid var(--border);padding:24px 0;color:var(--muted);font
 
   <!-- COMPARATIVA -->
   <section class="panel" id="panel-comparativa" role="tabpanel" aria-labelledby="tab-comparativa">
-    <h1>Por qué seL4 y no los otros</h1>
+    <h2>Por qué seL4 y no los otros</h2>
     <p>La elección de seL4 no es una moda: es el único núcleo de propósito general con corrección funcional formalmente verificada, un modelo de capacidades que minimiza la superficie de compromiso, y una planificación MCS apta para tiempo real.</p>
     <table>
       <thead><tr><th>Núcleo</th><th>Verificación formal</th><th>Modelo</th><th>Nota para ALIGNUX</th></tr></thead>
@@ -168,16 +172,16 @@ footer{border-top:1px solid var(--border);padding:24px 0;color:var(--muted);font
         <tr><td>Redox</td><td class="muted">No</td><td>Microkernel (Rust)</td><td>Referencia de stack Rust.</td></tr>
       </tbody>
     </table>
-    <h2>Una precisión que el informe original ya hacía bien</h2>
+    <h3>Una precisión que el informe original ya hacía bien</h3>
     <p>El informe técnico distingue entre la corrección funcional del núcleo (verificada en ciertas configuraciones) y la corrección del sistema ALIGNUX en su conjunto (que solo podrá afirmarse con su propia evidencia, por configuración y por plataforma).</p>
   </section>
 
   <!-- ROADMAP -->
   <section class="panel" id="panel-roadmap" role="tabpanel" aria-labelledby="tab-roadmap">
-    <h1>Roadmap: seis fases, cero atajos</h1>
+    <h2>Roadmap: seis fases, cero atajos</h2>
     <p class="lead">Cada fase cierra con una puerta (Gate) que demuestra el criterio de salida de forma automática.</p>
     <div id="roadmap-dinamico"><p class="muted">Cargando milestones…</p></div>
-    <h2>Dependencias críticas</h2>
+    <h3>Dependencias críticas</h3>
     <ul class="list">
       <li>M1 depende de M0 (toolchain y arranque).</li>
       <li>M2 depende de M1 (resmgr para asignar dispositivos).</li>
@@ -188,11 +192,11 @@ footer{border-top:1px solid var(--border);padding:24px 0;color:var(--muted);font
 
   <!-- TAREAS -->
   <section class="panel" id="panel-tareas" role="tabpanel" aria-labelledby="tab-tareas">
-    <h1>Backlog: 69 tareas con dueño y criterio de «hecho»</h1>
+    <h2>Backlog: 69 tareas con dueño y criterio de «hecho»</h2>
     <p class="lead">Cada tarea tiene criterio de aceptación medible, test de nivel L0–L6 asignado y trazabilidad a su especificación.</p>
     <div id="tareas-dinamico"><p class="muted">Cargando contadores…</p></div>
     <p class="muted">Lista completa en <a href="https://github.com/Soluciones-Alexendros/alignux/issues" target="_blank" rel="noopener">GitHub Issues</a>.</p>
-    <h2>Política Won't: los «no» que protegen el proyecto</h2>
+    <h3>Política Won't: los «no» que protegen el proyecto</h3>
     <ul class="list">
       <li><strong>W-01</strong> — sin GUI antes de M4.</li>
       <li><strong>W-02</strong> — sin POSIX nativo; compatibilidad = servidor/VM aislada.</li>
@@ -204,11 +208,11 @@ footer{border-top:1px solid var(--border);padding:24px 0;color:var(--muted);font
 
   <!-- VALIDACIÓN -->
   <section class="panel" id="panel-validacion" role="tabpanel" aria-labelledby="tab-validacion">
-    <h1>Validación: ningún avance sin su prueba</h1>
+    <h2>Validación: ningún avance sin su prueba</h2>
     <p>La pirámide de verificación detecta cada fallo en el nivel más bajo posible; L0–L4 bloquean el merge, L5 abre un issue, L6 es hardware.</p>
-    <h2>Las seis puertas del proyecto</h2>
+    <h3>Las seis puertas del proyecto</h3>
     <div id="gates-dinamico"><p class="muted">Cargando puertas…</p></div>
-    <h2>La pirámide de verificación</h2>
+    <h3>La pirámide de verificación</h3>
     <table>
       <thead><tr><th>Nivel</th><th>Qué</th><th>Presupuesto</th><th>Bloquea</th></tr></thead>
       <tbody>
@@ -221,14 +225,14 @@ footer{border-top:1px solid var(--border);padding:24px 0;color:var(--muted);font
         <tr><td>L6</td><td>Hardware real (RC)</td><td>release</td><td>gate</td></tr>
       </tbody>
     </table>
-    <h2>Los cuatro pipelines que lo ejecutan</h2>
+    <h3>Los cuatro pipelines que lo ejecutan</h3>
     <ul class="list">
       <li><strong>PR</strong> — L0 → L1/L2 → L3 → gate.</li>
       <li><strong>Main</strong> — todo PR + L4 + diff de autoridad + cobertura ≥ 80 % + build reproducible (2 runners).</li>
       <li><strong>Nightly</strong> — fuzzing, propiedades profundas, mutación, audit de dependencias.</li>
       <li><strong>Release</strong> — build reproducible ×2, suite completa, artefactos firmados, SBOM.</li>
     </ul>
-    <h2>Reglas anti-huecos</h2>
+    <h3>Reglas anti-huecos</h3>
     <ul class="list">
       <li>Contratos versionados (la IDL sube de versión al cambiar).</li>
       <li>Autoridad declarativa (diff entre permisos reales y SDF).</li>
@@ -241,10 +245,10 @@ footer{border-top:1px solid var(--border);padding:24px 0;color:var(--muted);font
 
   <!-- RIESGOS -->
   <section class="panel" id="panel-riesgos" role="tabpanel" aria-labelledby="tab-riesgos">
-    <h1>Riesgos: once vigilados, tres aceptados</h1>
+    <h2>Riesgos: once vigilados, tres aceptados</h2>
     <div id="riesgos-dinamico"><p class="muted">Cargando riesgos…</p></div>
     <div id="riesgos-lista"></div>
-    <h2>Aceptados conscientemente</h2>
+    <h3>Aceptados conscientemente</h3>
     <ul class="list">
       <li>El arranque queda fuera del perímetro verificado.</li>
       <li>No hay pruebas binarias de seguridad en x86-64.</li>
@@ -254,7 +258,7 @@ footer{border-top:1px solid var(--border);padding:24px 0;color:var(--muted);font
 
   <!-- FUENTES -->
   <section class="panel" id="panel-fuentes" role="tabpanel" aria-labelledby="tab-fuentes">
-    <h1>Fuentes</h1>
+    <h2>Fuentes</h2>
     <p class="lead">Las decisiones de ALIGNUX se apoyan en documentación verificable. Cada tarjeta indica qué decisión sostiene.</p>
     <div class="grid g2" id="fuentes-grid" style="margin-top:20px"></div>
   </section>
@@ -318,7 +322,7 @@ function renderFuentes() {
   const g = document.getElementById('fuentes-grid');
   g.innerHTML = SOURCES.map(([t, u, d]) =>
     '<a class="card-link" href="' + u + '" target="_blank" rel="noopener" title="' + d + '">' +
-      '<h3>' + t + '</h3><p class="muted" style="font-size:.85rem">' + d + '</p>' +
+      '<h4>' + t + '</h4><p class="muted" style="font-size:.85rem">' + d + '</p>' +
     '</a>').join('');
 }
 
@@ -339,7 +343,7 @@ const RISKS = [
 function renderRisks() {
   const el = document.getElementById('riesgos-lista');
   el.innerHTML = '<div class="grid g2" style="margin-top:12px">' + RISKS.map(([id, sev, t, d]) =>
-    '<div class="card"><h3>' + id + ' · ' + t + '</h3>' +
+    '<div class="card"><h4>' + id + ' · ' + t + '</h4>' +
     '<span class="badge ' + (sev === 'high' ? 'bad' : 'neutral') + '">severidad ' + sev + '</span>' +
     '<p class="muted" style="font-size:.85rem;margin-top:8px">' + d + '</p></div>').join('') + '</div>';
 }
@@ -377,11 +381,11 @@ function renderStatus(data) {
       '<div class="card"><div class="stat">' + (data.risks_active != null ? data.risks_active : '—') + '</div><div class="stat-label">riesgos activos</div></div>' +
     '</div>' +
     '<div class="grid g2" style="margin-top:12px">' +
-      '<div class="card"><h3>Pin congelado</h3>' +
+      '<div class="card"><h4>Pin congelado</h4>' +
         '<div class="kv"><span class="k">seL4</span><span class="v">' + (pin.sel4 || '—') + '</span></div>' +
         '<div class="kv"><span class="k">Microkit</span><span class="v">' + (pin.microkit || '—') + '</span></div>' +
         '<div class="kv"><span class="k">rust-sel4</span><span class="v">' + (pin.rust_sel4 || '—') + '</span></div></div>' +
-      '<div class="card"><h3>CI</h3>' +
+      '<div class="card"><h4>CI</h4>' +
         '<div class="kv"><span class="k">main</span>' + badgeFor(data.ci && data.ci.main ? data.ci.main.status : null) + '</div>' +
         '<div class="kv"><span class="k">nightly</span>' + badgeFor(data.ci && data.ci.nightly ? data.ci.nightly.status : null) + '</div>' +
         '<div class="kv"><span class="k">último run</span><span class="v">' + isoShort(data.ci ? data.ci.last_run : null) + '</span></div></div>' +
@@ -396,7 +400,7 @@ function renderStatus(data) {
     const cur = (data.phase_current === m.id);
     return '<a class="card-link" style="margin-bottom:12px" href="' + ISSUES + '?q=milestone%3A%22' + encodeURIComponent(m.id) + '%22" target="_blank" rel="noopener">' +
       '<div style="display:flex;justify-content:space-between;align-items:baseline">' +
-        '<h3>' + m.id + ' ' + (cur ? '<span class="badge pending">actual</span>' : '') + '</h3>' +
+        '<h4>' + m.id + ' ' + (cur ? '<span class="badge pending">actual</span>' : '') + '</h4>' +
         '<span class="muted" style="font-family:var(--mono);font-size:.8rem">' + m.open + ' abiertas · ' + m.closed + ' cerradas · vence ' + m.due + '</span>' +
       '</div>' +
       '<div class="bar" style="margin-top:10px"><span style="width:' + pct + '%"></span></div>' +
@@ -411,7 +415,7 @@ function renderStatus(data) {
       '<div class="card"><div class="stat">' + (t.should || 0) + '</div><div class="stat-label">prio:should</div></div>' +
       '<div class="card"><div class="stat">' + (t.could || 0) + '</div><div class="stat-label">prio:could</div></div>' +
     '</div>' +
-    '<div class="card"><h3>Por fase</h3>' + phases.map(p => {
+    '<div class="card"><h4>Por fase</h4>' + phases.map(p => {
       const n = (t.by_phase && t.by_phase[p]) || 0;
       return '<div class="kv"><span class="k">' + p + '</span><span class="v">' + n + '</span></div>';
     }).join('') + '</div>';

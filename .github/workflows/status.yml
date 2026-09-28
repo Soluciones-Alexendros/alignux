@@ -47,15 +47,10 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Verify files before build
-        working-directory: ./app
-        run: |
-          ls -la
-          cat package-lock.json | head -5
-
       - name: Build Astro site
-        working-directory: ./app
         run: |
+          cd app
+          ls -la
           npm ci
           npm run build
 

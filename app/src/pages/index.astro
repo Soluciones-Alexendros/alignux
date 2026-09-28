@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/layout/Header.astro';
+import Footer from '../components/layout/Footer.astro';
+import TabPanels from '../components/tabs/TabPanels.astro';
+---
+
+<BaseLayout title="ALIGNUX — Estado del proyecto" description="Estado vivo del proyecto ALIGNUX: un sistema operativo microkernel sobre seL4.">
+  <Header activeTab="estado" />
+  <TabPanels />
+  <Footer generatedAt={new Date().toISOString()} />
+</BaseLayout>

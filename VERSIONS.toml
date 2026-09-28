@@ -1,0 +1,29 @@
+# ALIGNUX — manifiesto de versiones (pin congelado).
+# Fuente de verdad para builds reproducibles. No editar sin ADR.
+# Los SHA-256 deben completarse desde el manifiesto oficial antes del
+# primer build real (T0-02). tools/sdk-fetch.sh --verify-sha256 rechaza
+# compilar con un pin ausente (fallo controlado, esperado en M0).
+
+[sel4]
+version = "16.0.0"
+release_date = "2026-07-22"
+notes = "release sin parches funcionales"
+sha256 = "PENDIENTE"  # TODO(T0-02): completar desde el manifiesto oficial de seL4
+
+[microkit]
+version = "2.3.1"
+release_date = "2026-09-18"
+notes = "integra seL4 16.0.0; x86-64: IOMMU activa por defecto, polaridad IOAPIC corregida, VMs restringidas"
+sha256 = "PENDIENTE"  # TODO(T0-02)
+
+[rust_sel4]
+version = "5.0.0"
+notes = "servicios Rust no_std; C solo en adaptadores auditados"
+sha256 = "PENDIENTE"  # TODO(T0-02)
+
+[platform]
+arch = "x86_64"
+board = "pc99"
+boot = "UEFI (OVMF) + GRUB2 + Multiboot2"
+vcpus = 1
+scheduler = "MCS"

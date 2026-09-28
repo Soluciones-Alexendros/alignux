@@ -1,0 +1,12 @@
+/target
+**/*.rs.bk
+*.img
+sdk/
+.cargo/
+*.swp
+
+# Material fuente local (superseded por docs/ y specs/ en el repo)
+/alignux-2026/
+
+# Bootstrap local: scripts de generación de issues NO versionados (datos viven en docs/)
+/bootstrap/

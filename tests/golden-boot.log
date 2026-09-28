@@ -1,0 +1,4 @@
+# ALIGNUX — golden boot log (referencia para L3).
+# M0: aún no hay arranque real; este fichero es un placeholder.
+# Se rellena en T0-04/V-08 con la salida determinista del boot.
+# Cualquier desviación estructural aquí rompe CI (V-08).

@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALIGNUX 2026 — Panel de estado del proyecto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0a; --surface:#141414; --surface2:#1a1a1a; --border:#262626;
+  --text:#f5f5f5; --muted:#9ca3af; --dim:#6b7280;
+  --accent:#00d9a3; --accent-soft:rgba(0,217,163,.12);
+  --danger:#ff4444; --danger-soft:rgba(255,68,68,.12);
+  --warn:#f5b942; --warn-soft:rgba(245,185,66,.12);
+  --info:#5ea2ff; --info-soft:rgba(94,162,255,.12);
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --disp:'Space Grotesk',sans-serif;
+  --body:'Inter',-apple-system,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+::selection{background:var(--accent);color:#000}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- Header ---------- */
+header{position:sticky;top:0;z-index:100;background:rgba(10,10,10,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.header-inner{max-width:1240px;margin:0 auto;padding:0 24px}
+.brand-row{display:flex;align-items:center;gap:16px;padding:16px 0 12px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px}
+.logo svg{flex:none}
+.wordmark{font-family:var(--disp);font-weight:700;font-size:20px;letter-spacing:.04em}
+.wordmark span{color:var(--accent)}
+.pin-badges{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+.pin{font-family:var(--mono);font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:99px;color:var(--muted);background:var(--surface)}
+.pin b{color:var(--accent);font-weight:500}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;padding-bottom:0;-ms-overflow-style:none;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+.tab{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:none;border:none;padding:12px 16px;cursor:pointer;border-bottom:2px solid transparent;transition:color .2s,border-color .2s;white-space:nowrap}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* ---------- Layout ---------- */
+main{max-width:1240px;margin:0 auto;padding:40px 24px 80px}
+section.panel{display:none;animation:fade .35s ease}
+section.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.sec-label{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+h1{font-family:var(--disp);font-size:clamp(28px,4vw,42px);font-weight:600;line-height:1.15;letter-spacing:-.01em;margin-bottom:12px}
+h2{font-family:var(--disp);font-size:22px;font-weight:600;margin:36px 0 14px;display:flex;align-items:center;gap:10px}
+h2::before{content:'';width:8px;height:8px;background:var(--accent);border-radius:2px;flex:none}
+.lede{color:var(--muted);max-width:760px;font-size:16px}
+p+p{margin-top:10px}
+
+/* ---------- Tooltips ---------- */
+.tip{border-bottom:1px dashed var(--dim);cursor:help;transition:border-color .2s,color .2s}
+.tip:hover,.tip:focus-visible{color:var(--accent);border-bottom-color:var(--accent);outline:none}
+#tooltip{position:fixed;z-index:999;max-width:320px;background:rgba(30,30,36,.92);backdrop-filter:blur(8px);border:1px solid rgba(74,74,90,.6);border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.55;color:#e0e0e0;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s;box-shadow:0 12px 32px rgba(0,0,0,.5)}
+#tooltip.show{opacity:1;transform:none}
+#tooltip .tt-title{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:4px}
+
+/* ---------- Cards & grids ---------- */
+.grid{display:grid;gap:14px}
+.grid.kpi{grid-template-columns:repeat(auto-fit,minmax(210px,1fr));margin:28px 0}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;transition:border-color .2s}
+.card:hover{border-color:#333}
+.kpi .k-label{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:8px}
+.kpi .k-value{font-family:var(--disp);font-size:26px;font-weight:600;line-height:1.1}
+.kpi .k-sub{font-size:12.5px;color:var(--muted);margin-top:6px}
+.k-value.ok{color:var(--accent)} .k-value.warn{color:var(--warn)} .k-value.bad{color:var(--danger)}
+
+/* status dots & badges */
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:1px}
+.dot.ok{background:var(--accent);box-shadow:0 0 8px rgba(0,217,163,.5)}
+.dot.warn{background:var(--warn);box-shadow:0 0 8px rgba(245,185,66,.5)}
+.dot.bad{background:var(--danger);box-shadow:0 0 8px rgba(255,68,68,.5)}
+.badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;padding:3px 9px;border-radius:99px;text-transform:uppercase}
+.badge.ok{background:var(--accent-soft);color:var(--accent)}
+.badge.warn{background:var(--warn-soft);color:var(--warn)}
+.badge.bad{background:var(--danger-soft);color:var(--danger)}
+.badge.info{background:var(--info-soft);color:var(--info)}
+.badge.neutral{background:rgba(255,255,255,.06);color:var(--muted)}
+
+/* progress bars */
+.bar{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden;margin-top:10px}
+.bar .fill{height:100%;background:var(--accent);border-radius:99px;width:0;transition:width 1s cubic-bezier(.4,0,.2,1)}
+.bar .fill.warn{background:var(--warn)}
+
+/* banner */
+.banner{border:1px solid rgba(0,217,163,.3);background:linear-gradient(135deg,rgba(0,217,163,.08),transparent 60%);border-radius:14px;padding:24px 26px;margin:26px 0}
+.banner.alert{border-color:rgba(255,68,68,.35);background:linear-gradient(135deg,rgba(255,68,68,.08),transparent 60%)}
+.banner .b-title{font-family:var(--disp);font-weight:600;font-size:17px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.banner p{color:var(--muted);font-size:14.5px;max-width:900px}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px;margin:16px 0}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:640px}
+th{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-align:left;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--surface);white-space:nowrap}
+td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--muted)}
+td:first-child{color:var(--text);font-weight:500}
+tr:last-child td{border-bottom:none}
+tr.hl td{background:rgba(0,217,163,.045)}
+.cmp td.cand{cursor:pointer;transition:background .2s}
+.cmp th.cand{cursor:pointer}
+.cmp .sel{background:var(--accent-soft)!important}
+.cmp td.sel{color:var(--text)}
+.cmp th.sel{color:var(--accent)}
+
+/* layers diagram */
+.layers{display:flex;flex-direction:column;gap:6px;margin:20px 0}
+.layer{border:1px solid var(--border);border-radius:10px;padding:14px 18px;background:var(--surface);display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;transition:border-color .2s,transform .2s;cursor:default}
+.layer:hover{border-color:var(--accent);transform:translateX(4px)}
+.layer .l-name{font-family:var(--disp);font-weight:600;font-size:15px;min-width:220px}
+.layer .l-desc{color:var(--muted);font-size:13px;flex:1;min-width:240px}
+.layer.kernel{border-color:rgba(0,217,163,.4);background:linear-gradient(90deg,rgba(0,217,163,.07),transparent 50%)}
+
+/* roadmap */
+.timeline{display:flex;gap:0;margin:28px 0 8px;overflow-x:auto;padding-bottom:8px}
+.phase{flex:1;min-width:150px;cursor:pointer;padding:0 8px}
+.phase .p-node{display:flex;align-items:center;gap:0}
+.phase .p-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--dim);background:var(--bg);flex:none;transition:all .25s}
+.phase .p-line{flex:1;height:2px;background:var(--border)}
+.phase:last-child .p-line{display:none}
+.phase .p-name{font-family:var(--disp);font-weight:600;font-size:14px;margin-top:12px}
+.phase .p-date{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:2px}
+.phase .p-title{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.45}
+.phase:hover .p-dot{border-color:var(--accent)}
+.phase.current .p-dot{border-color:var(--accent);background:var(--accent);box-shadow:0 0 12px rgba(0,217,163,.6)}
+.phase.sel .p-dot{border-color:var(--accent);background:var(--accent)}
+.phase.sel .p-name{color:var(--accent)}
+.phase-detail{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px;margin-top:18px}
+.phase-detail h3{font-family:var(--disp);font-size:19px;margin-bottom:4px}
+.phase-detail .pd-meta{font-family:var(--mono);font-size:11.5px;color:var(--dim);margin-bottom:16px}
+.pd-cols{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media(max-width:760px){.pd-cols{grid-template-columns:1fr}}
+.pd-cols h4{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.pd-cols ul{list-style:none}
+.pd-cols li{font-size:13.5px;color:var(--muted);padding:6px 0 6px 20px;position:relative;border-bottom:1px dashed #1f1f1f}
+.pd-cols li::before{content:'▸';position:absolute;left:0;color:var(--accent)}
+.exit-crit{margin-top:18px;padding:14px 16px;border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 8px 8px 0;font-size:13.5px;color:var(--muted)}
+.exit-crit b{color:var(--text);font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:4px}
+
+/* tasks */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0 6px}
+.fpill{font-family:var(--mono);font-size:11.5px;padding:7px 14px;border:1px solid var(--border);border-radius:99px;background:transparent;color:var(--muted);cursor:pointer;transition:all .2s}
+.fpill:hover{border-color:#555;color:var(--text)}
+.fpill.active{background:var(--accent);border-color:var(--accent);color:#000;font-weight:600}
+.task-stats{display:flex;gap:22px;flex-wrap:wrap;margin:18px 0;font-family:var(--mono);font-size:12px;color:var(--dim)}
+.task-stats b{color:var(--text);font-size:16px;display:block}
+.task-row{display:grid;grid-template-columns:78px 1fr auto;gap:14px;align-items:center;padding:13px 16px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;background:var(--surface);transition:border-color .2s}
+.task-row:hover{border-color:#3a3a3a}
+.task-row .t-id{font-family:var(--mono);font-size:12px;color:var(--accent)}
+.task-row .t-name{font-size:13.5px;color:var(--text)}
+.task-row .t-dep{font-size:11.5px;color:var(--dim);font-family:var(--mono);margin-top:2px}
+@media(max-width:600px){.task-row{grid-template-columns:1fr;gap:6px}}
+
+/* risks */
+.risk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;margin:18px 0}
+.risk{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;border-left:3px solid var(--warn)}
+.risk.high{border-left-color:var(--danger)}
+.risk.low{border-left-color:var(--accent)}
+.risk .r-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px}
+.risk .r-id{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.risk h4{font-size:14.5px;font-weight:600;margin-bottom:6px}
+.risk p{font-size:13px;color:var(--muted)}
+.risk .r-mit{margin-top:10px;font-size:12.5px;color:var(--muted);border-top:1px dashed #262626;padding-top:10px}
+.risk .r-mit b{color:var(--accent);font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+
+/* corrections accordion */
+.corr{border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.corr summary{padding:14px 18px;cursor:pointer;list-style:none;display:flex;align-items:center;gap:12px;font-size:14px;font-weight:500;background:var(--surface);transition:background .2s}
+.corr summary::-webkit-details-marker{display:none}
+.corr summary:hover{background:var(--surface2)}
+.corr summary::after{content:'+';margin-left:auto;font-family:var(--mono);color:var(--dim);font-size:16px}
+.corr[open] summary::after{content:'−'}
+.corr .c-body{padding:16px 18px;font-size:13.5px;color:var(--muted);border-top:1px solid var(--border);line-height:1.65}
+.corr .c-body code{font-family:var(--mono);font-size:12px;background:var(--surface2);padding:2px 6px;border-radius:4px;color:var(--accent)}
+
+/* footer */
+footer{border-top:1px solid var(--border);margin-top:60px;padding:32px 24px;max-width:1240px;margin-left:auto;margin-right:auto}
+footer .f-grid{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}
+footer p{font-size:12.5px;color:var(--dim);max-width:560px}
+footer .f-links{font-family:var(--mono);font-size:11.5px;color:var(--dim)}
+footer .f-links a{color:var(--muted);text-decoration:none;display:block;padding:2px 0;transition:color .2s}
+footer .f-links a:hover{color:var(--accent)}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin:14px 0;font-size:12px;color:var(--muted);font-family:var(--mono)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand-row">
+      <div class="logo">
+        <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">
+          <circle cx="15" cy="15" r="3.2" fill="#00d9a3"/>
+          <circle cx="15" cy="15" r="8" stroke="#00d9a3" stroke-opacity=".55" stroke-width="1.4" fill="none"/>
+          <circle cx="15" cy="15" r="13" stroke="#00d9a3" stroke-opacity=".22" stroke-width="1.2" fill="none"/>
+        </svg>
+        <div class="wordmark">ALIGNUX<span>·2026</span></div>
+      </div>
+      <div class="pin-badges">
+        <span class="pin">núcleo <b>seL4 16.0.0</b></span>
+        <span class="pin">composición <b>Microkit 2.3.1</b></span>
+        <span class="pin">userspace <b>rust-sel4 5.0.0</b></span>
+        <span class="pin">objetivo <b>QEMU x86-64</b></span>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Secciones del panel">
+      <button class="tab active" data-panel="estado" role="tab" aria-selected="true">Estado</button>
+      <button class="tab" data-panel="arquitectura" role="tab" aria-selected="false">Arquitectura</button>
+      <button class="tab" data-panel="comparativa" role="tab" aria-selected="false">Comparativa</button>
+      <button class="tab" data-panel="roadmap" role="tab" aria-selected="false">Roadmap</button>
+      <button class="tab" data-panel="tareas" role="tab" aria-selected="false">Tareas</button>
+      <button class="tab" data-panel="validacion" role="tab" aria-selected="false">Validación</button>
+      <button class="tab" data-panel="riesgos" role="tab" aria-selected="false">Riesgos</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ================= ESTADO ================= -->
+<section class="panel active" id="panel-estado">
+  <div class="sec-label">Panel de estado</div>
+  <h1>Un sistema operativo nuevo, sobre el núcleo mejor probado del mundo</h1>
+  <p class="lede">ALIGNUX es un sistema operativo en construcción. No parte de cero: usa <span class="tip" tabindex="0" data-tip="seL4|Microkernel con pruebas matemáticas formales de corrección. Es el único núcleo de propósito general con este nivel de garantía publicado. ALIGNUX fija la versión 16.0.0 (22-07-2026).">seL4</span> como núcleo y construye encima sus propios servicios en <span class="tip" tabindex="0" data-tip="Rust no_std|Rust sin biblioteca estándar: sin recolector de basura, sin runtime pesado. Ideal para servicios de sistema que deben ser predecibles y seguros en memoria.">Rust</span>. Todo lo que ves aquí está verificado contra fuentes oficiales a fecha de septiembre de 2026.</p>
+
+  <div class="grid kpi">
+    <div class="card">
+      <div class="k-label">Fase actual</div>
+      <div class="k-value">M0 · Cimientos</div>
+      <div class="k-sub">Toolchain fijado y primer arranque en QEMU</div>
+      <div class="bar"><div class="fill" data-w="12"></div></div>
+    </div>
+    <div class="card">
+      <div class="k-label">Salud de la decisión técnica</div>
+      <div class="k-value ok">Sólida</div>
+      <div class="k-sub">seL4 16.0.0 confirmado como release oficial y vigente</div>
+      <div class="bar"><div class="fill" data-w="90"></div></div>
+    </div>
+    <div class="card">
+      <div class="k-label">Coherencia de versiones</div>
+      <div class="k-value warn">Corregida</div>
+      <div class="k-sub">El borrador mezclaba seL4 16.0.0 con Microkit 2.2.0 (que integra seL4 15.0.0)</div>
+      <div class="bar"><div class="fill warn" data-w="100"></div></div>
+    </div>
+    <div class="card">
+      <div class="k-label">Verificación formal en plataforma propia</div>
+      <div class="k-value bad">Sin cobertura</div>
+      <div class="k-sub">MCS está verificado en RISC-V (2026), no en x86-64</div>
+      <div class="bar"><div class="fill warn" data-w="40"></div></div>
+    </div>
+  </div>
+
+  <div class="banner">
+    <div class="b-title"><span class="dot ok"></span>Decisión confirmada tras la revisión</div>
+    <p>Construir ALIGNUX sobre <b style="color:var(--text)">seL4 16.0.0 + Microkit 2.3.1 + rust-sel4 5.0.0</b>, con servicios en Rust, planificación <span class="tip" tabindex="0" data-tip="MCS (Mixed-Criticality Systems)|Extensión de seL4 que convierte el tiempo de CPU en un recurso explícito: cada componente declara cuánto tiempo puede consumir (presupuesto) y cada cuánto (periodo). Nadie puede acaparar la CPU sin permiso.">MCS</span> y una API nueva sin heredar POSIX. La revisión confirma el fondo del dictamen original y corrige tres imprecisiones de versiones y estado de verificación.</p>
+  </div>
+
+  <div class="banner alert">
+    <div class="b-title"><span class="dot bad"></span>Lo que NO puede decirse en público</div>
+    <p>«ALIGNUX está verificado» sería falso. En x86-64, la configuración verificada de seL4 cubre corrección funcional del núcleo <em>sin MCS</em> y excluye VT-x, IOMMU y el arranque. MCS se verificó en 2026, pero <b style="color:var(--text)">solo para RISC-V</b>. La documentación pública debe declarar siempre qué está verificado, dónde y qué no.</p>
+  </div>
+
+  <h2>Mapa de verificación formal (septiembre de 2026)</h2>
+  <div class="legend">
+    <span><span class="dot ok"></span>Verificado</span>
+    <span><span class="dot warn"></span>En progreso</span>
+    <span><span class="dot bad"></span>Sin cobertura</span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Configuración del núcleo</th><th>Estado</th><th>Qué significa para ALIGNUX</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>seL4 en x86-64 <span class="badge neutral">sin MCS</span></td>
+          <td><span class="badge ok">Verificado</span></td>
+          <td>Corrección funcional del C demostrada. No cubre virtualización, IOMMU ni el proceso de arranque.</td>
+        </tr>
+        <tr>
+          <td>seL4 MCS en RISC-V 64</td>
+          <td><span class="badge ok">Verificado · 2026</span></td>
+          <td>Hito de Proofcraft: primera prueba de corrección funcional de MCS. No es nuestra plataforma, pero valida el diseño.</td>
+        </tr>
+        <tr>
+          <td>seL4 MCS en AArch64</td>
+          <td><span class="badge warn">En progreso</span></td>
+          <td>Port de la prueba de RISC-V dentro del programa PROVERS de DARPA.</td>
+        </tr>
+        <tr class="hl">
+          <td>seL4 MCS en x86-64 <span class="badge info">plataforma ALIGNUX</span></td>
+          <td><span class="badge bad">Sin cobertura</span></td>
+          <td>Usamos MCS por su contabilidad temporal real, asumiendo que aquí no hay prueba formal. Riesgo R-01 aceptado y declarado.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Correcciones aplicadas al informe original</h2>
+  <p class="lede" style="font-size:14px;margin-bottom:16px">La revisión verificó cada afirmación contra las fuentes oficiales. Estas son las siete enmiendas, de mayor a menor impacto.</p>
+
+  <details class="corr" open>
+    <summary><span class="badge warn">Crítica</span>Microkit 2.2.0 no acompaña a seL4 16.0.0</summary>
+    <div class="c-body">El borrador fijaba <code>seL4 16.0.0</code> pero citaba el manual de <code>Microkit 2.2.0</code>. Microkit 2.2.0 integra seL4 <b>15.0.0</b>; la pareja correcta de seL4 16.0.0 es <code>Microkit 2.3.0</code> (22-07-2026), con parche <code>2.3.1</code> (18-09-2026). Se actualiza el pin completo y se añade <code>rust-sel4 5.0.0</code>, la versión compatible con ambos.</div>
+  </details>
+  <details class="corr">
+    <summary><span class="badge warn">Crítica</span>La verificación de MCS avanzó en 2026 — y la frase original quedó obsoleta</summary>
+    <div class="c-body">El borrador decía que la verificación de MCS «sigue en progreso». Realidad: Proofcraft <b>completó la prueba de corrección funcional de MCS para RISC-V 64 bits</b> en 2026, y el port a AArch64 está en marcha. Lo que sigue sin existir es la prueba para <b>x86-64</b>, la plataforma de ALIGNUX. La nueva redacción lo dice por plataforma, sin ambigüedad.</div>
+  </details>
+  <details class="corr">
+    <summary><span class="badge bad">Nuevo riesgo</span>Microkit 2.3.0 rompe compatibilidad en x86-64</summary>
+    <div class="c-body">La 2.3.0 activa la <span class="tip" tabindex="0" data-tip="IOMMU|Unidad de gestión de memoria para dispositivos: controla a qué zonas de RAM puede acceder cada dispositivo por DMA. Sin IOMMU, un driver comprometido podría leer o escribir toda la memoria del sistema.">IOMMU</span> por defecto en x86-64 (todo <span class="tip" tabindex="0" data-tip="DMA (Direct Memory Access)|Mecanismo por el que un dispositivo (disco, red) lee y escribe en memoria sin pasar por la CPU. Imprescindible para rendimiento; peligroso sin aislamiento.">DMA</span> exige declarar <code>&lt;io_address_space&gt;</code>), corrige la polaridad de IRQs IOAPIC y restringe las VMs. El roadmap incorpora «IOMMU-first» como decisión de diseño (ADR-06) en lugar de descubrirlo a mitad de un driver.</div>
+  </details>
+  <details class="corr">
+    <summary><span class="badge neutral">Menor</span>Manual de referencia obsoleto (10.1.1 → 16.0.0)</summary>
+    <div class="c-body">La referencia 35 citaba el <i>seL4 Reference Manual 10.1.1</i>. Se sustituye por el manual 16.0.0, coherente con la versión fijada del núcleo.</div>
+  </details>
+  <details class="corr">
+    <summary><span class="badge neutral">Matización</span>Estado real de GNU/Hurd en 2026</summary>
+    <div class="c-body">El port x86-64 de Hurd está «esencialmente completo» (Guix publicó el Hurd de 64 bits en marzo de 2026) y ~75 % del archivo de Debian compila. SMP mejoró con un patchset reciente sobre GNU Mach, pero sigue inmaduro. La conclusión del informe no cambia; el matiz sí importa para no infravalorar al comparado.</div>
+  </details>
+  <details class="corr">
+    <summary><span class="badge neutral">Estructura</span>El análisis comparativo estaba incompleto</summary>
+    <div class="c-body">El borrador detallaba solo las fortalezas de seL4 y se interrumpía. La versión revisada completa las debilidades de seL4 y el análisis simétrico de GNU Mach + Hurd y de Fiasco + L4Re, y añade la sección de decisión con sus cinco condiciones.</div>
+  </details>
+  <details class="corr">
+    <summary><span class="badge info">Añadido</span>División operativa del documento</summary>
+    <div class="c-body">El informe monolítico se divide en una serie operativa de nueve documentos: <code>00</code> dictamen revisado · <code>01</code> arquitectura · <code>02</code> roadmap (M0–M5) · <code>03</code> backlog de tareas · <code>04</code> riesgos · <code>05</code> especificación y concreción (DoR/DoD) · <code>06</code> cadena de verificación y cohesión (gates G0–G5) · <code>07</code> pipelines CI/CD · <code>08</code> producción y release.</div>
+  </details>
+</section>
+
+<!-- ================= ARQUITECTURA ================= -->
+<section class="panel" id="panel-arquitectura">
+  <div class="sec-label">Documento 01</div>
+  <h1>Arquitectura: mecanismos dentro, políticas fuera</h1>
+  <p class="lede">El núcleo solo sabe hacer cuatro cosas: comunicar procesos, controlar permisos, repartir memoria y repartir tiempo de CPU. Todo lo demás —nombres, archivos, red, recuperación de errores— vive fuera, en servicios reemplazables escritos en Rust.</p>
+
+  <h2>La pila, de arriba abajo</h2>
+  <div class="layers">
+    <div class="layer"><span class="l-name">Aplicaciones ALIGNUX</span><span class="l-desc">Usan la API nativa. Sin POSIX, sin <code style="font-family:var(--mono);font-size:12px">fork()</code>, sin señales: un contrato nuevo y deliberado.</span></div>
+    <div class="layer"><span class="l-name">Servicios de sistema</span><span class="l-desc">Nombres, archivos, red, consola. Procesos aislados en <span class="tip" tabindex="0" data-tip="PD (Protection Domain)|Dominio de protección: la unidad de aislamiento de Microkit. Cada servicio vive en su propia PD con su memoria y permisos exactos; si uno cae, no arrastra a los demás.">PDs</span> Rust que se hablan por <span class="tip" tabindex="0" data-tip="IPC (Inter-Process Communication)|El sistema de mensajes del núcleo. En seL4 es síncrono y muy rápido: un proceso llama a otro como quien hace una llamada de teléfono, no como quien envía una carta.">IPC</span>.</span></div>
+    <div class="layer"><span class="l-name">Infraestructura</span><span class="l-desc">Gestor de memoria, gestor de recursos/IRQ y drivers con el patrón <span class="tip" tabindex="0" data-tip="sDDF (seL4 Device Driver Framework)|Marco oficial para escribir drivers en espacio de usuario: los datos viajan por anillos de memoria compartida (sin copias) y los avisos por notificaciones ligeras.">sDDF</span>.</span></div>
+    <div class="layer"><span class="l-name">Microkit 2.3.1</span><span class="l-desc">Define el sistema de forma <b style="color:var(--text)">declarativa</b> (un archivo <span class="tip" tabindex="0" data-tip="SDF (System Description File)|Archivo XML que declara todos los componentes, canales de comunicación, memoria y permisos del sistema antes de compilar. Si no está en el SDF, no existe: máxima previsibilidad.">SDF</span>) y lo monta igual en cada build. Sin sorpresas en arranque.</span></div>
+    <div class="layer kernel"><span class="l-name">seL4 16.0.0 · MCS</span><span class="l-desc">Microkernel: <span class="tip" tabindex="0" data-tip="Capacidad (capability)|Una llave digital infalsificable que combina identidad y permiso. Poseer la capacidad de un objeto ES tener permiso sobre él. Los nombres de usuario o rutas no conceden nada por sí solos.">capacidades</span>, IPC síncrono, memoria <span class="tip" tabindex="0" data-tip="Untyped|Memoria «en bruto» que el sistema tipa explícitamente (frames, TCBs, CNodes…). Quien posee un Untyped decide qué se construye con él, y puede revocar toda su descendencia de golpe.">Untyped</span> y planificación <span class="tip" tabindex="0" data-tip="Scheduling context|En MCS, el «monedero» de tiempo de CPU. Un servidor pasivo no tiene monedero propio: trabaja con el tiempo que le dona el cliente que lo llama. Así la factura de CPU siempre la paga quien pide el trabajo.">MCS</span>.</span></div>
+    <div class="layer"><span class="l-name">Hardware</span><span class="l-desc">Primero QEMU x86-64 con un procesador virtual; después SMP y el portátil real (AERO X16).</span></div>
+  </div>
+
+  <h2>Los ocho dominios de protección del MVP</h2>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>PD</th><th>Lenguaje</th><th>Qué hace</th><th>Autoridad que recibe</th></tr></thead>
+      <tbody>
+        <tr><td><code style="font-family:var(--mono)">init</code></td><td>C</td><td>Arranca y delega; lógica mínima</td><td>Recursos iniciales, los cede de inmediato</td></tr>
+        <tr><td><code style="font-family:var(--mono)">memgr</code></td><td>Rust</td><td>Reparte y contabiliza la memoria</td><td>Memoria Untyped particionada</td></tr>
+        <tr><td><code style="font-family:var(--mono)">resmgr</code></td><td>Rust</td><td>Descubre dispositivos (PCI/ACPI) y los asigna</td><td>IRQs y rangos MMIO</td></tr>
+        <tr><td><code style="font-family:var(--mono)">drv_uart</code></td><td>C auditado</td><td>Consola serie de depuración</td><td>Solo su IRQ y su MMIO</td></tr>
+        <tr><td><code style="font-family:var(--mono)">drv_block</code></td><td>Rust</td><td>Disco por bloques (virtio primero, NVMe después)</td><td>IRQ + MMIO + espacio IOMMU propio</td></tr>
+        <tr><td><code style="font-family:var(--mono)">vfs</code></td><td>Rust</td><td>Archivos con semántica propia (no POSIX)</td><td>Un canal hacia drv_block</td></tr>
+        <tr><td><code style="font-family:var(--mono)">namesrv</code></td><td>Rust</td><td>Traduce nombres a capacidades, con listas de acceso</td><td>Endpoints de registro</td></tr>
+        <tr><td><code style="font-family:var(--mono)">shell</code></td><td>Rust</td><td>Consola de pruebas del MVP</td><td>Capacidades delegadas mínimas</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Tres reglas que no se negocian</h2>
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+    <div class="card"><div class="k-label" style="font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:8px">Regla 1</div><b>Los nombres no dan poder.</b><p style="color:var(--muted);font-size:13.5px;margin-top:6px">Saber que existe «vfs» no te deja usarlo: necesitas la capacidad concreta. Como en un edificio donde conocer el número de una puerta no la abre.</p></div>
+    <div class="card"><div class="k-label" style="font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:8px">Regla 2</div><b>El cliente paga su CPU.</b><p style="color:var(--muted);font-size:13.5px;margin-top:6px">Cuando un proceso pide trabajo a un servidor, le presta su propio tiempo de CPU (donación MCS). Ningún servicio puede gastar tiempo a escondidas.</p></div>
+    <div class="card"><div class="k-label" style="font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:8px">Regla 3</div><b>DMA solo con IOMMU.</b><p style="color:var(--muted);font-size:13.5px;margin-top:6px">Todo dispositivo que accede a memoria declara su zona permitida desde el primer driver. Un driver fallido o malicioso no puede tocar la RAM de otros.</p></div>
+  </div>
+
+  <h2>Lo que ALIGNUX no es (todavía)</h2>
+  <p class="lede" style="font-size:14.5px">No es un escritorio, no es compatible con Linux, no es dinámico (los componentes se definen al compilar), no usa varios núcleos, y su configuración de ejecución no está formalmente verificada. Cada «no» tiene su fase en el roadmap — excepto POSIX en la API nativa, que es un «no» permanente por diseño.</p>
+</section>
+
+<!-- ================= COMPARATIVA ================= -->
+<section class="panel" id="panel-comparativa">
+  <div class="sec-label">Del dictamen revisado</div>
+  <h1>Por qué seL4 y no los otros</h1>
+  <p class="lede">Tres candidatos reales comparados con los mismos criterios. Pulsa la cabecera de un candidato para destacar su columna.</p>
+
+  <div class="tbl-wrap">
+    <table class="cmp" id="cmpTable">
+      <thead>
+        <tr>
+          <th>Criterio</th>
+          <th class="cand sel" data-col="1">seL4 ★</th>
+          <th class="cand" data-col="2">GNU Mach + Hurd</th>
+          <th class="cand" data-col="3">Fiasco + L4Re</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Qué es exactamente</td><td class="cand sel">Microkernel de 3ª generación, familia L4</td><td class="cand">Mach (núcleo de 1ª gen.) + Hurd (servidores encima)</td><td class="cand">Microkernel L4 + framework de usuario completo</td></tr>
+        <tr><td>Verificación formal</td><td class="cand sel"><span class="badge ok">Decisiva</span> Pruebas públicas por configuración</td><td class="cand"><span class="badge bad">Ninguna</span></td><td class="cand"><span class="badge bad">Ninguna pública</span></td></tr>
+        <tr><td>Drivers disponibles</td><td class="cand sel">sDDF joven; ecosistema incompleto</td><td class="cand">Rump kernels de NetBSD tapan huecos</td><td class="cand"><span class="badge ok">Amplio</span> NVMe, AHCI, red, ACPI/PCIe</td></tr>
+        <tr><td>Tiempo de CPU controlable</td><td class="cand sel"><span class="badge ok">Sí</span> MCS: presupuesto y periodo delegables</td><td class="cand">Contabilidad históricamente criticada</td><td class="cand">Tiempo real y time-sharing concurrentes</td></tr>
+        <tr><td>Estado en x86-64 (2026)</td><td class="cand sel">Soportado (QEMU y hardware)</td><td class="cand">Port «esencialmente completo»; SMP inmaduro</td><td class="cand">Soportado, BSP amplio</td></tr>
+        <tr><td>Encaje con una API nueva</td><td class="cand sel"><span class="badge ok">Excelente</span> El núcleo no impone contratos</td><td class="cand">Bajo: existe para ser Unix/GNU</td><td class="cand">Bueno, pero el framework impone convenciones</td></tr>
+        <tr><td>Principal riesgo</td><td class="cand sel">Ecosistema pequeño, curva de aprendizaje</td><td class="cand">Deuda arquitectónica de Mach</td><td class="cand">Quedar absorbido por el framework L4Re (C++/Lua)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="banner">
+    <div class="b-title"><span class="dot ok"></span>Veredicto</div>
+    <p>seL4 gana donde importa para ALIGNUX: garantías formales, núcleo mínimo que no impone decisiones y control explícito del tiempo de CPU. L4Re es la alternativa más cómoda (más drivers listos) pero convertiría ALIGNUX en «una distribución de L4Re». Hurd aporta ideas —sus <b style="color:var(--text)">traductores</b> inspiran el diseño de servicios— pero su núcleo es de otra época. Ambos quedan como referentes de diseño, no como base.</p>
+  </div>
+
+  <h2>Una precisión que el informe original ya hacía bien</h2>
+  <p class="lede" style="font-size:14.5px">«L4» no es un producto: es una familia de microkernels a la que pertenecen tanto seL4 como Fiasco. Y «Hurd» no es un microkernel: es el conjunto de servidores que corre sobre GNU Mach. Comparar «seL4 contra Hurd contra L4» sería comparar un motor, un coche entero y una escuela de ingeniería. La matriz de arriba compara piezas equivalentes.</p>
+</section>
+
+<!-- ================= ROADMAP ================= -->
+<section class="panel" id="panel-roadmap">
+  <div class="sec-label">Documento 02</div>
+  <h1>Roadmap: seis fases, cero atajos</h1>
+  <p class="lede">Cada fase tiene un criterio de salida medible. La siguiente no empieza hasta que el anterior se cumple. Pulsa una fase para ver su detalle.</p>
+
+  <div class="timeline" id="timeline"></div>
+  <div class="phase-detail" id="phaseDetail"></div>
+
+  <h2>Dependencias críticas</h2>
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+    <div class="card"><b>M2 ← M1</b><p style="color:var(--muted);font-size:13.5px;margin-top:6px">Los drivers necesitan la IDL de comunicación y el gestor de recursos funcionando.</p></div>
+    <div class="card"><b>M3 ← M1 + M2</b><p style="color:var(--muted);font-size:13.5px;margin-top:6px">El gestor dinámico solo se construye sobre recuperación de fallos y drivers estables. Dinamismo sobre base inestable = depuración multiplicada.</p></div>
+    <div class="card"><b>M4 ← M2</b><p style="color:var(--muted);font-size:13.5px;margin-top:6px">El patrón de driver con DMA se prueba primero en QEMU; el hardware real llega después.</p></div>
+    <div class="card"><b>Ninguna ← POSIX</b><p style="color:var(--muted);font-size:13.5px;margin-top:6px">La compatibilidad con Linux/POSIX (M5) es un extra aislado: una máquina virtual o un servidor, nunca una modificación del núcleo.</p></div>
+  </div>
+</section>
+
+<!-- ================= TAREAS ================= -->
+<section class="panel" id="panel-tareas">
+ <div class="sec-label">Documento 03</div>
+  <h1>Backlog: 69 tareas con dueño y criterio de «hecho»</h1>
+  <p class="lede">Prioridad <span class="tip" tabindex="0" data-tip="MoSCoW|Método de priorización: Must (imprescindible), Should (importante), Could (si hay tiempo), Won't (descartado explícitamente esta iteración). Los Won't protegen el proyecto de la inflación de alcance.">MoSCoW</span> y dependencias explícitas. Filtra por fase o por prioridad.</p>
+
+  <div class="task-stats" id="taskStats"></div>
+
+  <div class="filters" id="phaseFilters">
+    <button class="fpill active" data-f="all">Todas las fases</button>
+    <button class="fpill" data-f="M0">M0 Cimientos</button>
+    <button class="fpill" data-f="M1">M1 Servicios</button>
+    <button class="fpill" data-f="M2">M2 Drivers</button>
+    <button class="fpill" data-f="M3">M3 SMP+Dinámico</button>
+    <button class="fpill" data-f="M4">M4 Hardware</button>
+    <button class="fpill" data-f="M5">M5 Compatibilidad</button>
+    <button class="fpill" data-f="S">Especificación</button>
+    <button class="fpill" data-f="V">Verificación</button>
+    <button class="fpill" data-f="CI">Pipelines</button>
+    <button class="fpill" data-f="P">Producción</button>
+  </div>
+  <div class="filters" id="prioFilters">
+    <button class="fpill active" data-p="all">Todas las prioridades</button>
+    <button class="fpill" data-p="M">Must</button>
+    <button class="fpill" data-p="S">Should</button>
+    <button class="fpill" data-p="C">Could</button>
+  </div>
+
+  <div id="taskList"></div>
+
+  <h2>Política Won't: los «no» que protegen el proyecto</h2>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>ID</th><th>Compromiso de no hacer</th></tr></thead>
+      <tbody>
+        <tr><td>W-01</td><td>Interfaz gráfica o escritorio antes de la fase M4.</td></tr>
+        <tr><td>W-02</td><td>Compatibilidad POSIX / ABI Linux dentro de la API nativa.</td></tr>
+        <tr><td>W-03</td><td>Parches funcionales al núcleo durante el MVP.</td></tr>
+        <tr><td>W-04</td><td>Gestor dinámico antes de cumplir los criterios de salida de M1–M2.</td></tr>
+        <tr><td>W-05</td><td>Afirmar en público que «ALIGNUX está verificado» (en x86-64 + MCS no lo está).</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= VALIDACIÓN ================= -->
+<section class="panel" id="panel-validacion">
+  <div class="sec-label">Documentos 05 · 06 · 07 · 08</div>
+  <h1>Validación: ningún avance sin su prueba</h1>
+  <p class="lede">La regla que gobierna todo el proyecto: <b style="color:var(--text)">nada empieza sin especificación aprobada y nada se da por hecho sin una prueba automática que lo demuestre.</b> Cada fase tiene una puerta (<span class="tip" tabindex="0" data-tip="Gate (puerta de fase)|Punto de control entre fases. Combina comprobaciones automáticas (tests, builds reproducibles) y un checklist humano. Si la puerta está en rojo, la fase siguiente no puede empezar: así un error nunca se arrastra al siguiente nivel.">gate</span>) y cada tarea se verifica en el nivel más barato capaz de cazar su fallo.</p>
+
+  <h2>Las seis puertas del proyecto</h2>
+  <div class="timeline" id="gateLine"></div>
+  <div class="phase-detail" id="gateDetail"></div>
+
+  <h2>La pirámide de verificación</h2>
+  <p class="lede" style="font-size:14.5px">Los tests baratos corren mil veces; los caros, una. Un fallo cazado tarde obliga a escribir un test más abajo: la pirámide aprende de sus propios fallos.</p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Nivel</th><th>Qué demuestra</th><th>Cuándo corre</th><th>Bloquea</th></tr></thead>
+      <tbody>
+        <tr><td><b>L0</b> · Estática</td><td>Formato, lint, SDF válido contra su esquema, IDL bien formada</td><td>Cada PR · &lt; 3 min</td><td><span class="badge ok">Merge</span></td></tr>
+        <tr><td><b>L1</b> · Unitaria</td><td>Lógica pura de cada servicio, sin kernel</td><td>Cada PR · &lt; 5 min</td><td><span class="badge ok">Merge</span></td></tr>
+        <tr><td><b>L2</b> · Propiedades</td><td><span class="tip" tabindex="0" data-tip="Property-based testing|En vez de probar ejemplos concretos, se generan miles de casos aleatorios y se comprueba que una propiedad siempre se cumple: la memoria nunca se solapa, un anillo nunca pierde datos. Caza casos límite que a un humano no se le ocurrirían.">Invariantes</span> con 10 000 casos generados: memoria sin solapes, anillos sin pérdida, permisos sin fugas</td><td>Cada PR · &lt; 10 min</td><td><span class="badge ok">Merge</span></td></tr>
+        <tr><td><b>L3</b> · Integración</td><td>Imagen construida que arranca en QEMU, consola responde, servicios se hablan de verdad</td><td>Cada PR · &lt; 15 min</td><td><span class="badge ok">Merge</span></td></tr>
+        <tr><td><b>L4</b> · Fallos</td><td><span class="tip" tabindex="0" data-tip="Inyección de fallos|Provocar desastres a propósito: matar un servicio en plena operación, agotar su tiempo de CPU, corromper sus datos. Si el sistema se recupera solo, la arquitectura funciona; si no, se corrige antes de que pase en producción.">Matar servicios</span>, agotar CPU, corromper datos — y comprobar que el sistema se recupera</td><td>Cada push a main · &lt; 30 min</td><td><span class="badge warn">main</span></td></tr>
+        <tr><td><b>L5</b> · Profunda</td><td><span class="tip" tabindex="0" data-tip="Fuzzing|Bombardear un componente con millones de entradas aleatorias o mutadas buscando que se rompa. Es la forma estándar de encontrar fallos de seguridad en parsers y decodificadores.">Fuzzing</span> 24 h, 1 000 000 de casos de propiedades, mutation testing</td><td>Cada noche</td><td><span class="badge neutral">Abre issue</span></td></tr>
+        <tr><td><b>L6</b> · Hardware</td><td>La suite completa pasando en el portátil real, no solo en el simulador</td><td>Cada release candidate (desde M4)</td><td><span class="badge bad">Release</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Los cuatro pipelines que lo ejecutan</h2>
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+    <div class="card">
+      <span class="badge info">En cada PR</span>
+      <h4 style="margin:10px 0 6px;font-size:15px">pr.yml</h4>
+      <p style="font-size:13px;color:var(--muted)">Lint y validación de esquemas → tests unitarios → 10k propiedades → build de imagen y arranque en QEMU. Si algo falla, la PR no se puede fusionar. Lo barato primero: un error de formato se detecta en 3 minutos, no tras 20 de build.</p>
+    </div>
+    <div class="card">
+      <span class="badge info">En cada push a main</span>
+      <h4 style="margin:10px 0 6px;font-size:15px">main.yml</h4>
+      <p style="font-size:13px;color:var(--muted)">Todo lo anterior más lo caro: inyección de fallos, comparación de permisos reales contra los declarados, y <b style="color:var(--text)">build reproducible en dos máquinas</b> — si los hashes no coinciden, se bloquea y se abre una incidencia.</p>
+    </div>
+    <div class="card">
+      <span class="badge warn">Cada noche</span>
+      <h4 style="margin:10px 0 6px;font-size:15px">nightly.yml</h4>
+      <p style="font-size:13px;color:var(--muted)">Fuzzing de horas, un millón de casos de propiedades, auditoría de dependencias. Un crash nocturno abre una issue automática con los pasos para reproducirlo.</p>
+    </div>
+    <div class="card">
+      <span class="badge ok">Solo con tag v*</span>
+      <h4 style="margin:10px 0 6px;font-size:15px">release.yml</h4>
+      <p style="font-size:13px;color:var(--muted)">Build reproducible verificado, artefactos firmados, lista de materiales (<span class="tip" tabindex="0" data-tip="SBOM (Software Bill of Materials)|El «listado de ingredientes» del software: cada dependencia con su versión exacta. Permite saber de inmediato si una release contiene una librería con una vulnerabilidad recién descubierta.">SBOM</span>) y attestation de procedencia. Requiere aprobación humana y checklist completo.</p>
+    </div>
+  </div>
+
+  <h2>Reglas anti-huecos</h2>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Regla</th><th>Qué hueco cierra</th></tr></thead>
+      <tbody>
+        <tr><td>Contratos versionados</td><td>La IDL lleva versión; un cambio incompatible exige transición. Nadie rompe a otro en silencio.</td></tr>
+        <tr><td>Autoridad declarativa</td><td>Un test compara los permisos reales en ejecución contra los declarados: un servicio con permisos de más hace saltar la alarma.</td></tr>
+        <tr><td>Arranque de referencia</td><td>El log de boot correcto está guardado; cualquier desviación estructural rompe la CI.</td></tr>
+        <tr><td>Cobertura con ratchet</td><td>La cobertura de tests solo puede subir (≥ 80 %): bajarla rompe la build.</td></tr>
+        <tr><td>Main siempre verde</td><td>Prohibido fusionar con CI roja o sin revisión cruzada (protección de rama).</td></tr>
+        <tr><td>Trazabilidad</td><td>Cada test declara qué tarea y qué especificación demuestra; un test huérfano delata un hueco.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="banner alert">
+    <div class="b-title"><span class="dot bad"></span>Cadena rota: todo se detiene</div>
+    <p>Cinco situaciones congelan el avance hasta repararse: una puerta que pasa a rojo sin atención en 48 h · una release publicada sin checklist · un cambio de interfaz que rompe consumidores sin transición · hashes de build divergentes sin explicación · una tarea en desarrollo sin especificación aprobada. <b style="color:var(--text)">Reparar la cadena tiene prioridad sobre cualquier feature nueva.</b></p>
+  </div>
+
+  <h2>El camino a producción</h2>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Versión</th><th>Nombre</th><th>Exige la puerta</th><th>Qué demuestra</th></tr></thead>
+      <tbody>
+        <tr><td><b>v0.1</b> Bootstrap</td><td>M0</td><td><span class="badge info">G0</span></td><td>La imagen arranca en QEMU y la consola responde; build reproducible</td></tr>
+        <tr><td><b>v0.2</b> Services</td><td>M1</td><td><span class="badge info">G1</span></td><td>Servicios mínimos con recuperación automática y CPU contabilizada</td></tr>
+        <tr><td><b>v0.3</b> Storage</td><td>M2</td><td><span class="badge info">G2</span></td><td>Disco persistente con IOMMU; drivers que sobreviven a fallos inducidos</td></tr>
+        <tr><td><b>v0.4</b> Dynamic</td><td>M3</td><td><span class="badge info">G3</span></td><td>Multi-núcleo y componentes creados/destruidos en caliente sin fugas</td></tr>
+        <tr><td><b>v0.5</b> Hardware</td><td>M4</td><td><span class="badge info">G4</span></td><td>Arranque en el AERO X16 real con NVMe físico</td></tr>
+        <tr><td><b>v1.0</b> Alignux</td><td>M5</td><td><span class="badge info">G5</span></td><td>Compatibilidad como servicio aislado + informe público de aseguramiento</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= RIESGOS ================= -->
+<section class="panel" id="panel-riesgos">
+  <div class="sec-label">Documento 04</div>
+  <h1>Riesgos: once vigilados, tres aceptados</h1>
+  <p class="lede">Cada riesgo tiene mitigación y un <b style="color:var(--text)">disparador observable</b>: la señal concreta que indica que hay que actuar. Ordenados por severidad.</p>
+
+  <div class="legend">
+    <span><span class="dot bad"></span>Severidad alta</span>
+    <span><span class="dot warn"></span>Severidad media</span>
+    <span><span class="dot ok"></span>Severidad baja</span>
+  </div>
+
+  <div class="risk-grid" id="riskGrid"></div>
+
+  <h2>Aceptados conscientemente</h2>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Riesgo aceptado</th><th>Por qué se acepta</th></tr></thead>
+      <tbody>
+        <tr><td>El arranque (OVMF/GRUB) nunca está verificado</td><td>Ningún sistema seL4 lo tiene en el perímetro de prueba. Se mitiga con cadena de arranque minimalista y reproducible.</td></tr>
+        <tr><td>Sin pruebas de seguridad ni binarias en x86-64</td><td>Solo existe corrección funcional (y sin MCS). Aceptado para el MVP; documentado en todo texto público.</td></tr>
+        <tr><td>MCS sin verificar en nuestra plataforma</td><td>Se asume a cambio de contabilidad temporal real desde el diseño. Si Proofcraft porta la prueba, se reevalúa la plataforma de referencia.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="f-grid">
+    <p><b style="color:var(--text)">ALIGNUX 2026 — Panel de estado.</b><br>Generado el 29 de septiembre de 2026 a partir de la revisión verificada del informe técnico. Fuentes: releases oficiales de seL4 y Microkit (GitHub), sel4.systems, Proofcraft, Trustworthy Systems, GNU/Guix y Phoronix (FOSDEM 2026).</p>
+    <div class="f-links">
+      <a href="#" data-goto="estado">00 · Dictamen revisado</a>
+      <a href="#" data-goto="arquitectura">01 · Arquitectura</a>
+      <a href="#" data-goto="roadmap">02 · Roadmap</a>
+      <a href="#" data-goto="tareas">03 · Tareas + 05-08 · Specs, CI, producción</a>
+      <a href="#" data-goto="validacion">06-07 · Verificación y pipelines</a>
+      <a href="#" data-goto="riesgos">04 · Riesgos</a>
+    </div>
+  </div>
+</footer>
+
+<div id="tooltip" role="tooltip"><span class="tt-title"></span><span class="tt-body"></span></div>
+
+<script>
+/* ---------- Tooltip system ---------- */
+const tt = document.getElementById('tooltip');
+const ttTitle = tt.querySelector('.tt-title');
+const ttBody = tt.querySelector('.tt-body');
+function showTip(el){
+  const [title, body] = (el.dataset.tip || '').split('|');
+  if(!body) return;
+  ttTitle.textContent = title; ttBody.textContent = body;
+  tt.classList.add('show');
+  const r = el.getBoundingClientRect();
+  const tw = Math.min(320, window.innerWidth - 24);
+  tt.style.maxWidth = tw + 'px';
+  let x = r.left + r.width/2 - tt.offsetWidth/2;
+  x = Math.max(12, Math.min(x, window.innerWidth - tt.offsetWidth - 12));
+  let y = r.bottom + 10;
+  if(y + tt.offsetHeight > window.innerHeight - 12) y = r.top - tt.offsetHeight - 10;
+  tt.style.left = x + 'px'; tt.style.top = y + 'px';
+}
+function hideTip(){ tt.classList.remove('show'); }
+document.addEventListener('mouseover', e => { const t = e.target.closest('.tip'); if(t) showTip(t); });
+document.addEventListener('mouseout', e => { if(e.target.closest('.tip')) hideTip(); });
+document.addEventListener('focusin', e => { const t = e.target.closest('.tip'); if(t) showTip(t); });
+document.addEventListener('focusout', hideTip);
+document.addEventListener('scroll', hideTip, {passive:true});
+
+/* ---------- Tabs ---------- */
+const tabs = document.querySelectorAll('.tab');
+function activate(name){
+  tabs.forEach(t => { const on = t.dataset.panel === name; t.classList.toggle('active', on); t.setAttribute('aria-selected', on); });
+  document.querySelectorAll('section.panel').forEach(s => s.classList.toggle('active', s.id === 'panel-' + name));
+  hideTip();
+  animateBars();
+  window.scrollTo({top:0});
+}
+tabs.forEach(t => t.addEventListener('click', () => activate(t.dataset.panel)));
+document.querySelectorAll('[data-goto]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); activate(a.dataset.goto); }));
+
+/* ---------- Progress bars ---------- */
+function animateBars(){
+  document.querySelectorAll('section.panel.active .fill').forEach(f => {
+    f.style.width = '0%';
+    requestAnimationFrame(() => requestAnimationFrame(() => { f.style.width = f.dataset.w + '%'; }));
+  });
+}
+animateBars();
+
+/* ---------- Comparison table column select ---------- */
+const cmp = document.getElementById('cmpTable');
+cmp.querySelectorAll('th.cand').forEach(th => th.addEventListener('click', () => {
+  const col = parseInt(th.dataset.col, 10);
+  cmp.querySelectorAll('.cand').forEach(c => c.classList.remove('sel'));
+  cmp.querySelectorAll('th.cand[data-col="' + col + '"]').forEach(c => c.classList.add('sel'));
+  cmp.querySelectorAll('tbody tr').forEach(tr => { if(tr.children[col]) tr.children[col].classList.add('sel'); });
+}));
+
+/* ---------- Roadmap data ---------- */
+const phases = [
+ {id:'M0', date:'2026 · Q4', name:'Cimientos', title:'Toolchain fijado y primer arranque', current:true,
+  items:['Manifiesto de versiones: seL4 16.0.0 + Microkit 2.3.1 + rust-sel4 5.0.0','Imagen Microkit mínima arrancando en QEMU (UEFI → GRUB2 → Multiboot2)','Driver de consola serie con patrón sDDF','CI: build + arranque + test de consola automáticos','Plantilla de servicio en Rust documentada'],
+  exit:'git clone && make run arranca el sistema y muestra una consola interactiva, en CI y en local.'},
+ {id:'M1', date:'2027 · Q1', name:'MVP de servicios', title:'Gestores de memoria, nombres y recursos',
+  items:['memgr: reparto de memoria con cuotas por servicio','namesrv: nombres → capacidades, con listas de acceso','IDL propia: comunicación 100 % tipada, generada','resmgr: descubrimiento PCI/ACPI y reparto de dispositivos','Recuperación v1: un servicio caído se reinicia solo'],
+  exit:'Un servicio de prueba descubre a otro por nombre, pide memoria, lo invoca y es reiniciado automáticamente tras un fallo inducido.'},
+ {id:'M2', date:'2027 · Q2', name:'Drivers y datos', title:'Disco persistente con IOMMU desde el día uno',
+  items:['Driver de disco virtio-blk con anillos de memoria compartida','IOMMU configurada: el DMA solo toca su zona permitida','Sistema de archivos nativo (diseño propio, no POSIX)','Banco de pruebas que mata drivers en plena operación'],
+  exit:'Leer y escribir un volumen persistente; matar el driver de disco y recuperarlo sin reiniciar ni corromper datos.'},
+ {id:'M3', date:'2027 · Q3', name:'SMP + dinamismo', title:'Varios núcleos y componentes creados en caliente',
+  items:['Configuración multi-núcleo (2–4 vCPU) con afinidades','Contabilidad de CPU por núcleo bajo carga','Gestor dinámico v1: crear componentes en ejecución','Destrucción limpia: revocar todo sin fugas de permisos'],
+  exit:'Crear un componente nuevo en caliente, conectarlo al sistema y destruirlo sin dejar rastro de capacidades.'},
+ {id:'M4', date:'2027 · Q4', name:'Hardware real', title:'Del simulador al portátil AERO X16',
+  items:['Arranque UEFI en la máquina real con consola de depuración','Driver NVMe nativo con IOMMU (sustituye a virtio)','Driver de red según el chipset del equipo','Plan B documentado: hardware intermedio si el portátil se resiste'],
+  exit:'El sistema arranca en el AERO X16 y el driver NVMe físico pasa las mismas pruebas que en QEMU.'},
+ {id:'M5', date:'2028', name:'Compatibilidad', title:'Linux como invitado, nunca como base', current:false,
+  items:['Máquina virtual Linux aislada sobre Microkit','Evaluación de compatibilidad POSIX parcial como servicio','Informe público de aseguramiento: qué está verificado y dónde'],
+  exit:'Demostración de que la compatibilidad se añade fuera del núcleo, como una pieza más y aislable.'}
+];
+const tl = document.getElementById('timeline');
+phases.forEach((p,i) => {
+  const div = document.createElement('div');
+  div.className = 'phase' + (p.current ? ' current' : '');
+  div.innerHTML = `<div class="p-node"><div class="p-dot"></div><div class="p-line"></div></div>
+    <div class="p-name">${p.id} · ${p.name}</div><div class="p-date">${p.date}</div><div class="p-title">${p.title}</div>`;
+  div.addEventListener('click', () => selectPhase(i));
+  tl.appendChild(div);
+});
+function selectPhase(i){
+  const p = phases[i];
+  document.querySelectorAll('.phase').forEach((el,j) => el.classList.toggle('sel', j === i));
+  const d = document.getElementById('phaseDetail');
+  d.innerHTML = `<h3>${p.id} — ${p.name} ${p.current ? '<span class="badge ok">Fase actual</span>' : ''}</h3>
+    <div class="pd-meta">${p.date} · ${p.title}</div>
+    <div class="pd-cols">
+      <div><h4>Trabajo principal</h4><ul>${p.items.map(x => `<li>${x}</li>`).join('')}</ul></div>
+      <div><h4>Estado</h4><ul><li>${p.current ? 'En preparación — el backlog de tareas está listo para empezar.' : 'Planificado — arranca cuando la fase anterior cumpla su criterio de salida.'}</li></ul>
+      <div class="exit-crit"><b>Criterio de salida</b>${p.exit}</div></div>
+    </div>`;
+}
+selectPhase(0);
+
+/* ---------- Gates ---------- */
+const gates = [
+ {id:'G0', fase:'M0', name:'Cimientos', auto:'Build reproducible (mismo hash en 2 máquinas) · arranque < 5 s · consola con eco · CI verde', manual:'Toolchain documentado y convenciones aprobadas'},
+ {id:'G1', fase:'M1', name:'Servicios', auto:'Invariantes de memoria y nombres verdes · RPC tipado extremo a extremo · reinicio de servicio < 50 ms · presupuestos de CPU medidos', manual:'Especificaciones S-01 a S-05 aprobadas, sin desviaciones pendientes'},
+ {id:'G2', fase:'M2', name:'Drivers', auto:'Checksums de disco correctos · IOMMU activa con accesos fuera de zona contenidos · driver matado y recuperado sin corrupción', manual:'S-06 y S-07 aprobadas; guía de driver reproducible por un tercero'},
+ {id:'G3', fase:'M3', name:'SMP + dinámico', auto:'1 000 000 de mensajes multi-núcleo sin bloqueos · destrucción de componente con 0 permisos fugados', manual:'Modelo de amenaza del gestor dinámico aprobado'},
+ {id:'G4', fase:'M4', name:'Hardware real', auto:'Suite completa verde en el AERO X16 · NVMe físico pasa las pruebas de disco', manual:'Inventario ACPI/PCIe del equipo documentado'},
+ {id:'G5', fase:'M5', name:'Compatibilidad', auto:'Linux invitado arranca aislado y un test confirma que no puede escapar de su perímetro', manual:'Informe público de aseguramiento publicado'}
+];
+const gl = document.getElementById('gateLine');
+gates.forEach((g,i) => {
+  const div = document.createElement('div');
+  div.className = 'phase';
+  div.innerHTML = `<div class="p-node"><div class="p-dot"></div><div class="p-line"></div></div>
+    <div class="p-name">${g.id} · ${g.name}</div><div class="p-date">cierra ${g.fase}</div>`;
+  div.addEventListener('click', () => selectGate(i));
+  gl.appendChild(div);
+});
+function selectGate(i){
+  const g = gates[i];
+  document.querySelectorAll('#gateLine .phase').forEach((el,j) => el.classList.toggle('sel', j === i));
+  document.getElementById('gateDetail').innerHTML = `<h3>${g.id} — puerta de «${g.name}» <span class="badge info">cierra ${g.fase}</span></h3>
+    <div class="pd-meta">Si esta puerta está en rojo, ninguna tarea de la fase siguiente puede empezar.</div>
+    <div class="pd-cols">
+      <div><h4>Comprobaciones automáticas</h4><ul><li>${g.auto}</li></ul></div>
+      <div><h4>Checklist humano</h4><ul><li>${g.manual}</li></ul></div>
+    </div>`;
+}
+selectGate(0);
+
+/* ---------- Tasks ---------- */
+const tasks = [
+ // [id, nombre, prio, fase, depende]
+ ['T0-01','Repo con manifiesto de versiones fijado','M','M0','—'],
+ ['T0-02','Toolchain reproducible (contenedor o Nix)','M','M0','T0-01'],
+ ['T0-03','Receta QEMU: UEFI + GRUB2 + Multiboot2','M','M0','T0-01'],
+ ['T0-04','Imagen Microkit mínima que arranca','M','M0','T0-02, T0-03'],
+ ['T0-05','Plantilla de servicio en Rust no_std','M','M0','T0-02'],
+ ['T0-06','Driver de consola serie (patrón sDDF)','M','M0','T0-04'],
+ ['T0-07','CI: build + arranque + test de consola','M','M0','T0-04, T0-06'],
+ ['T0-08','Documento de convenciones del proyecto','S','M0','—'],
+ ['T1-01','IDL propia + generador de bindings Rust','M','M1','T0-05'],
+ ['T1-02','memgr: memoria con cuotas por servicio','M','M1','T0-05, T1-01'],
+ ['T1-03','namesrv: nombres → capacidades con ACL','M','M1','T1-01'],
+ ['T1-04','resmgr: PCI/ACPI y reparto de dispositivos','M','M1','T1-01'],
+ ['T1-05','Recuperación v1: reinicio automático de servicios','M','M1','T0-05'],
+ ['T1-06','Presupuestos MCS en todos los servicios + medición','M','M1','T0-04'],
+ ['T1-07','Shell interactiva de pruebas','S','M1','T1-03'],
+ ['T1-08','Pruebas property-based del gestor de memoria','S','M1','T1-02'],
+ ['T1-09','Fuzzing del decodificador de la IDL','S','M1','T1-01'],
+ ['T2-01','Driver de disco virtio-blk (anillos sDDF)','M','M2','T1-01, T1-04'],
+ ['T2-02','IOMMU configurada para el driver de disco','M','M2','T2-01'],
+ ['T2-03','Sistema de archivos nativo mínimo','M','M2','T2-01'],
+ ['T2-04','Banco de inyección de fallos en drivers','M','M2','T2-01'],
+ ['T2-05','Driver de red virtio-net','S','M2','T2-01'],
+ ['T2-06','Guía del patrón de driver ALIGNUX','S','M2','T2-02'],
+ ['T3-01','Configuración SMP 2–4 vCPU en QEMU','M','M3','M1 completo'],
+ ['T3-02','Contabilidad de CPU por núcleo','M','M3','T3-01'],
+ ['T3-03','Modelo de amenaza del gestor dinámico','M','M3','—'],
+ ['T3-04','Gestor dinámico v1: crear componentes en caliente','M','M3','T3-03, M1–M2'],
+ ['T3-05','Destrucción con revocación completa de permisos','M','M3','T3-04'],
+ ['T3-06','Tests de concurrencia SMP (estrés de mensajes)','S','M3','T3-01'],
+ ['T4-01','Arranque UEFI en el AERO X16','M','M4','M1'],
+ ['T4-02','Inventario ACPI/PCIe real vs QEMU','M','M4','T4-01'],
+ ['T4-03','Driver NVMe nativo con IOMMU','M','M4','T2-01, T2-02, T4-02'],
+ ['T4-04','Driver de red del equipo','S','M4','T2-05, T4-02'],
+ ['T4-05','Plan B de hardware intermedio','C','M4','—'],
+ ['T5-01','Máquina virtual Linux invitada y aislada','C','M5','M2'],
+ ['T5-02','Evaluación de compatibilidad POSIX como servicio','C','M5','T5-01'],
+ ['T5-03','Informe público de aseguramiento por plataforma','S','M5','M3'],
+ // Especificación y concreción (doc 05)
+ ['S-01','Spec: modelo de capacidades ALIGNUX','M','S','—'],
+ ['S-02','Spec: IDL v1 y versionado de contratos','M','S','—'],
+ ['S-03','Spec: esquema SDF y convenciones','M','S','T0-08'],
+ ['S-04','Spec: modelo de seguridad y amenazas','M','S','—'],
+ ['S-05','Spec: contrato de memoria e invariantes','M','S','S-01'],
+ ['S-06','Spec: protocolo de anillos de datos','S','S','—'],
+ ['S-07','Spec: política de recuperación','M','S','S-01'],
+ ['S-08','Spec: API pública nativa v0.1','C','S','M3'],
+ // Verificación y cohesión (doc 06)
+ ['V-01','Validador de SDF contra esquema (L0)','M','V','S-03'],
+ ['V-02','Harness L3: boot QEMU + consola + RPC extremo a extremo','M','V','T0-06, T0-07'],
+ ['V-03','Diff de autoridad: permisos reales vs declarados','M','V','S-01, T1-05'],
+ ['V-04','Harness L4: inyección de fallos','M','V','T1-05, T2-01'],
+ ['V-05','Fuzzing de IDL y parsers en nightly (L5)','S','V','T1-09'],
+ ['V-06','Ratchet de cobertura ≥ 80 %','S','V','T0-07'],
+ ['V-07','Test de reproducibilidad: mismo hash en 2 runners','M','V','T0-02'],
+ ['V-08','Golden boot log comparado en L3','S','V','T0-04'],
+ // Pipelines CI/CD (doc 07)
+ ['CI-01','pr.yml: L0–L3 bloqueando merges','M','CI','T0-02, V-01, V-02'],
+ ['CI-02','main.yml: L4 + diff autoridad + cobertura','M','CI','V-03, V-04, V-06'],
+ ['CI-03','Reproducibilidad en 2 runners con alerta','M','CI','T0-02'],
+ ['CI-04','nightly.yml: fuzzing + 1M propiedades + mutation','S','CI','V-05, T1-09'],
+ ['CI-05','release.yml: firma + SBOM + attestation','M','CI','G1'],
+ ['CI-06','Protección de rama main + CODEOWNERS','M','CI','T0-01'],
+ ['CI-07','Dependabot/Renovate con pin por SHA','S','CI','T0-01'],
+ ['CI-08','Dashboard de métricas de CI','C','CI','CI-02'],
+ // Producción y release (doc 08)
+ ['P-01','SemVer + Conventional Commits + changelog automático','M','P','T0-01'],
+ ['P-02','Firma de artefactos + attestation OIDC','M','P','CI-05'],
+ ['P-03','SBOM CycloneDX en cada release','M','P','CI-05'],
+ ['P-04','Plantilla de informe de aseguramiento por release','M','P','S-04'],
+ ['P-05','Canal nightly publicado con disclaimer','S','P','CI-04'],
+ ['P-06','CODEOWNERS + SECURITY.md','M','P','CI-06'],
+ ['P-07','Proceso de release candidate (congelación → promoción)','S','P','CI-05'],
+ ['P-08','Release v0.1 «Bootstrap»','M','P','G0, P-01…P-04'],
+];
+const prioBadge = {M:'<span class="badge bad">Must</span>', S:'<span class="badge warn">Should</span>', C:'<span class="badge info">Could</span>'};
+const taskList = document.getElementById('taskList');
+let curF = 'all', curP = 'all';
+function renderTasks(){
+  const rows = tasks.filter(t => (curF==='all'||t[3]===curF) && (curP==='all'||t[2]===curP));
+  taskList.innerHTML = rows.map(t => `<div class="task-row">
+    <span class="t-id">${t[0]}</span>
+    <span><span class="t-name">${t[1]}</span><br><span class="t-dep">fase ${t[3]} · depende de: ${t[4]}</span></span>
+    <span>${prioBadge[t[2]]}</span></div>`).join('');
+  const m = tasks.filter(t=>t[2]==='M').length, s = tasks.filter(t=>t[2]==='S').length, c = tasks.filter(t=>t[2]==='C').length;
+  document.getElementById('taskStats').innerHTML =
+    `<span><b>${tasks.length}</b>tareas totales</span><span><b>${m}</b>must</span><span><b>${s}</b>should</span><span><b>${c}</b>could</span><span><b>${rows.length}</b>visibles con el filtro</span>`;
+}
+document.getElementById('phaseFilters').addEventListener('click', e => {
+  const b = e.target.closest('.fpill'); if(!b) return;
+  document.querySelectorAll('#phaseFilters .fpill').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); curF = b.dataset.f; renderTasks();
+});
+document.getElementById('prioFilters').addEventListener('click', e => {
+  const b = e.target.closest('.fpill'); if(!b) return;
+  document.querySelectorAll('#prioFilters .fpill').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); curP = b.dataset.p; renderTasks();
+});
+renderTasks();
+
+/* ---------- Risks ---------- */
+const risks = [
+ {id:'R-02', sev:'high', p:'alta', i:'alto', t:'Ecosistema de drivers inmaduro', d:'sDDF es joven; NVMe, red y GPU habrá que escribirlos o portarlos.', m:'Empezar por virtio en QEMU; presupuestar M4 con holgura; estudiar el catálogo de L4Re como referencia.', trg:'M2 se retrasa más de 4 semanas.'},
+ {id:'R-05', sev:'high', p:'media', i:'alto', t:'Gestor dinámico prematuro', d:'Introducir dinamismo antes de estabilizar la recuperación multiplica el coste de depuración.', m:'Condición dura: M3 solo arranca con M1–M2 cerrados (política W-04).', trg:'Presión por adelantar M3.'},
+ {id:'R-09', sev:'high', p:'media', i:'alto', t:'Inflación de alcance hacia escritorio/POSIX', d:'El atractivo de «que arranque un escritorio» puede descarrilar el núcleo del proyecto.', m:'Política Won’t explícita (W-01, W-02); POSIX se deriva siempre a M5.', trg:'Features de GUI aparecen en el backlog antes de M4.'},
+ {id:'R-01', sev:'low', p:'alta', i:'medio', t:'Brecha de verificación en x86-64 + MCS', d:'La configuración de ejecución no tiene cobertura formal; el argumento «verificado» se devalúa si se comunica mal.', m:'Comunicación honesta por plataforma; perfil RISC-V/AArch64 como referencia verificada a medio plazo.', trg:'Cualquier texto público que afirme verificación global.'},
+ {id:'R-04', sev:'low', p:'alta', i:'medio', t:'Curva de aprendizaje del modelo de capacidades', d:'CSpace, Untyped, revoke y MCS son conceptos exigentes para el equipo.', m:'Tutoriales oficiales como onboarding; plantilla de servicio como referencia; revisiones cruzadas.', trg:'Tareas de M1 tardan el doble de lo estimado.'},
+ {id:'R-03', sev:'low', p:'media', i:'medio', t:'Cambios incompatibles de Microkit 2.3.x en x86-64', d:'IOMMU por defecto, polaridad IOAPIC corregida y nuevas restricciones de VMs rompen supuestos antiguos.', m:'Diseño IOMMU-first desde el primer driver (ADR-06); leer release notes antes de cada actualización.', trg:'Fallos de DMA inexplicables en QEMU.'},
+ {id:'R-06', sev:'low', p:'media', i:'medio', t:'El AERO X16 es un primer hardware ambicioso', d:'Firmware propietario, IOMMU estricta, gestión de energía y sin puerto serie fácil.', m:'Plan B: hardware intermedio documentado por la comunidad seL4 (T4-05); consola por USB debug.', trg:'T4-01 sin éxito tras 3 semanas.'},
+ {id:'R-07', sev:'low', p:'media', i:'medio', t:'SMP en configuración MCS', d:'Las combinaciones SMP+MCS+HYP tienen historial de bugs (ajustes recientes en 16.0.0).', m:'SMP llega en M3, tras dominar uniprocesador; suite de estrés T3-06.', trg:'Fallos intermitentes solo bajo SMP.'},
+ {id:'R-08', sev:'low', p:'media', i:'medio', t:'Dependencia de una comunidad pequeña', d:'Soporte por listas y GitHub sin acuerdo de nivel de servicio.', m:'Versiones fijadas; fork propio del SDK; contribuir fixes upstream.', trg:'Issue crítico sin respuesta en 2 semanas.'},
+ {id:'R-10', sev:'low', p:'media', i:'bajo', t:'Sobre-ingeniería de la IDL', d:'Diseñar el lenguaje de interfaces más allá de lo que los servicios reales piden.', m:'IDL mínima en M1; crecer solo por demanda real.', trg:'Más de 2 revisiones de diseño de la IDL sin código.'},
+ {id:'R-11', sev:'low', p:'baja', i:'alto', t:'Mala comunicación del aseguramiento', d:'Sobredimensionar lo verificado dañaría la credibilidad del proyecto.', m:'Informe de aseguramiento por plataforma (T5-03) y disclaimer fijo en el README.', trg:'Preguntas externas sobre «verificación total».'},
+];
+const sevLabel = {high:'<span class="badge bad">Severidad alta</span>', low:'<span class="badge warn">Media</span>'};
+document.getElementById('riskGrid').innerHTML = risks.map(r => `
+ <div class="risk ${r.sev}">
+   <div class="r-head"><span class="r-id">${r.id}</span>${sevLabel[r.sev]}</div>
+   <h4>${r.t}</h4>
+   <p>${r.d}</p>
+   <p style="margin-top:6px"><span class="badge neutral">P: ${r.p}</span> <span class="badge neutral">I: ${r.i}</span></p>
+   <div class="r-mit"><b>Mitigación</b><br>${r.m}<br><br><b>Disparador</b><br>${r.trg}</div>
+ </div>`).join('');
+</script>
+</body>
+</html>

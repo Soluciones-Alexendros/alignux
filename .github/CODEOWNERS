@@ -1,0 +1,20 @@
+# ALIGNUX — Dueños de código por subsistema. Revisión cruzada obligatoria (DoD).
+# El dueño de un subsistema debe aprobar cualquier cambio que toque su área.
+
+# Gestores de servicio (memoria / nombres / recursos)
+/services/memgr/   @Alexendros
+/services/namesrv/ @Alexendros
+/services/resmgr/  @Alexendros
+
+# Drivers
+/drivers/          @Alexendros
+
+# Interfaces (IDL) y SDF — cambios de contrato exigen revisión estricta
+/idl/              @Alexendros
+/system.sdf        @Alexendros
+
+# Infraestructura de CI — cambios en workflows requieren revisión de seguridad de cadena
+/.github/workflows/ @Alexendros
+
+# Especificaciones formales
+/specs/            @Alexendros

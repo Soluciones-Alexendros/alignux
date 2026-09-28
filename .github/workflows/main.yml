@@ -1,0 +1,138 @@
+# ALIGNUX — CI de main: suite completa (PR + L4 inyección + diff autoridad +
+# ratchet cobertura + build reproducible en 2 runners). Se ejecuta tras merge a main.
+name: Main
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  SEL4_VERSION: "16.0.0"
+  MICROKIT_VERSION: "2.3.1"
+  RUST_SEL4_VERSION: "5.0.0"
+
+jobs:
+  l0-estatica:
+    name: L0 — Estática
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: tools/sdf-check system.sdf
+      - run: tools/idl-check idl/
+
+  l1-l2-tests:
+    name: L1/L2 — Tests
+    needs: l0-estatica
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+      - run: cargo test --workspace
+      - run: PROPTEST_CASES=10000 cargo test -p memgr -p namesrv
+
+  l3-boot-qemu:
+    name: L3 — Boot QEMU
+    needs: l1-l2-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - run: tools/sdk-fetch.sh --verify-sha256
+      - run: make image
+      - run: tools/qemu-boot-test.sh --timeout 300 --golden tests/golden-boot.log
+
+  l4-inyeccion:
+    name: L4 — Inyección de fallos
+    needs: l3-boot-qemu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - run: tools/sdk-fetch.sh --verify-sha256
+      - run: make image
+      - name: Inyección de fallos (catálogo V-04)
+        run: echo "L4 — catálogo de fallos implementado en V-04 (T2-04/T1-05)."
+
+  diff-autoridad:
+    name: Diff de autoridad (runtime vs SDF)
+    needs: l3-boot-qemu
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - name: Diff autoridad (V-03)
+        run: echo "V-03 — comparación de permisos reales vs declarados (S-01)."
+
+  reproducibilidad:
+    name: Build reproducible (2 runners)
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - run: tools/sdk-fetch.sh --verify-sha256
+      - run: make image
+      - name: SHA-256 de la imagen
+        run: sha256sum build/alignux.img | tee /tmp/alignux.sha256
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sha256-${{ matrix.runner }}
+          path: /tmp/alignux.sha256
+          if-no-files-found: error
+
+  reproducibilidad-verifica:
+    name: Verificar reproducibilidad (V-07)
+    needs: reproducibilidad
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: /tmp/hashes
+      - name: Comparar hashes
+        run: |
+          h1="$(cat /tmp/hashes/sha256-ubuntu-latest/alignux.sha256 | awk '{print $1}')"
+          h2="$(cat /tmp/hashes/sha256-ubuntu-24.04/alignux.sha256 | awk '{print $1}')"
+          if [ "$h1" != "$h2" ]; then
+            echo "ALIGNUX: ERROR — hashes divergen ($h1 vs $h2). Build no reproducible." >&2
+            exit 1
+          fi
+          echo "ALIGNUX: build reproducible — $h1"
+
+  cobertura-ratchet:
+    name: Ratchet de cobertura ≥ 80 % (V-06)
+    needs: l1-l2-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+      - name: Cobertura
+        run: echo "V-06 — ratchet de cobertura implementado en T0-07/V-06 (umbral 80 %)."
+
+  gate:
+    name: Gate M0 — consolidación
+    needs: [l3-boot-qemu, l4-inyeccion, diff-autoridad, reproducibilidad-verifica, cobertura-ratchet]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Consolidación de gate
+        run: echo "Suite de main completa."

@@ -1,0 +1,89 @@
+# ALIGNUX — CI de Pull Requests: L0 estática → L1/L2 tests → L3 boot QEMU → gate.
+# Seguridad de cadena: acciones fijadas por SHA (no por tag), permissions mínimos,
+# concurrency cancel-in-progress para no apilar ejecuciones de un mismo PR.
+name: PR
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-${{ github.head_ref }}
+  cancel-in-progress: true
+
+env:
+  SEL4_VERSION: "16.0.0"
+  MICROKIT_VERSION: "2.3.1"
+  RUST_SEL4_VERSION: "5.0.0"
+
+jobs:
+  l0-estatica:
+    name: L0 — Estática (fmt / clippy / SDF / IDL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        with:
+          components: rustfmt, clippy
+      - name: cargo fmt --check
+        run: cargo fmt --all --check
+      - name: cargo clippy (-D warnings)
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Validar SDF
+        run: tools/sdf-check system.sdf
+      - name: Validar IDL
+        run: tools/idl-check idl/
+
+  l1-l2-tests:
+    name: L1/L2 — Tests unitarios y de propiedades
+    needs: l0-estatica
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+      - name: L1 — unit tests (workspace)
+        run: cargo test --workspace
+      - name: L2 — property tests (10 000 casos)
+        run: PROPTEST_CASES=10000 cargo test -p memgr -p namesrv
+
+  l3-boot-qemu:
+    name: L3 — Boot QEMU + golden log
+    needs: l1-l2-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - name: Obtener SDK (verifica SHA-256)
+        run: tools/sdk-fetch.sh --verify-sha256
+      - name: Construir imagen
+        run: make image
+      - name: Boot test (golden log)
+        run: tools/qemu-boot-test.sh --timeout 300 --golden tests/golden-boot.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: boot-log
+          path: build/boot.log
+          if-no-files-found: ignore
+
+  gate:
+    name: Gate M0 — consolidación
+    needs: [l0-estatica, l1-l2-tests, l3-boot-qemu]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Consolidación de gate
+        run: |
+          echo "L0–L3 ejecutados."
+          echo "Merge sujeto a revisión cruzada (DoD): revisor != autor, criterio demostrado, sin regresión."

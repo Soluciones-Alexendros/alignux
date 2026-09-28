@@ -1,0 +1,10 @@
+[package]
+name = "memgr"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+rust-sel4 = { workspace = true }
+
+# Placeholder M0: el gestor de memoria real se implementa en T1-02 (spec S-01/S-05).

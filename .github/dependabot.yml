@@ -1,0 +1,20 @@
+# ALIGNUX — Dependabot: cargo + GitHub Actions, semanal. Solo auto-merge de patches con CI verde.
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"
+    open-pull-requests-limit: 5
+    versioning-strategy: "lockfile-only"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(ci)"
+    open-pull-requests-limit: 5
+    # Las acciones están fijadas por SHA; Dependabot propone actualizaciones que pasan por CI completa.

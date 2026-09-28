@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# ALIGNUX — validación L0 de la IDL (gramática de S-02).
+# M0: la IDL aún no existe; un directorio vacío es válido (aviso, no error).
+# La validación real del decodificador llega con T1-01 (S-02).
+# Usage: tools/idl-check <idl_dir>
+set -euo pipefail
+
+IDL_DIR="${1:-idl}"
+
+if [ ! -d "$IDL_DIR" ]; then
+  echo "ALIGNUX: ERROR — directorio $IDL_DIR no existe." >&2
+  exit 1
+fi
+
+count="$(find "$IDL_DIR" -type f | wc -l | tr -d ' ')"
+if [ "$count" -eq 0 ]; then
+  echo "ALIGNUX: $IDL_DIR vacío — sin interfaces IDL todavía (esperado en M0)."
+  exit 0
+fi
+
+echo "ALIGNUX: $count archivo(s) en $IDL_DIR — validación gramatical pendiente de T1-01 (S-02)."
+exit 0

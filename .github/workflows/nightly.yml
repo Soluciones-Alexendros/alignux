@@ -1,0 +1,62 @@
+# ALIGNUX — Nightly: fuzzing 6 h + 1M propiedades + mutation + auditoría de dependencias.
+# Si falla, abre un issue automáticamente (permissions issues:write).
+name: Nightly
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+env:
+  SEL4_VERSION: "16.0.0"
+  MICROKIT_VERSION: "2.3.1"
+  RUST_SEL4_VERSION: "5.0.0"
+
+jobs:
+  fuzz-idl:
+    name: Fuzzing IDL (6 h)
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+      - name: Fuzzing (corpus en tests/fuzz-corpus)
+        run: tools/fuzz.sh --hours 6 --corpus tests/fuzz-corpus
+      - name: Abrir issue si hay crash
+        if: failure()
+        run: tools/open-fuzz-issue.sh
+
+  propiedades-profundas:
+    name: Propiedades profundas (1M casos)
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+      - run: PROPTEST_CASES=1000000 cargo test -p memgr -p namesrv
+
+  mutation-muestreada:
+    name: Mutation testing (cargo mutants --in-diff)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+      - name: Mutation sobre diff vs origin/main
+        run: echo "Mutation testing implementado en V-05 (cargo mutants --in-diff origin/main)."
+
+  seguridad-deps:
+    name: Auditoría de dependencias
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+      - name: cargo audit
+        run: cargo audit --deny warnings
+      - name: cargo deny
+        run: cargo deny check

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# ALIGNUX — validación L0 del System Description File (well-formedness).
+# La validación completa contra el esquema (S-03) la hace V-01.
+# Usage: tools/sdf-check <system.sdf>
+set -euo pipefail
+
+SDF="${1:-system.sdf}"
+
+if [ ! -f "$SDF" ]; then
+  echo "ALIGNUX: ERROR — $SDF no existe." >&2
+  exit 1
+fi
+
+python3 - "$SDF" <<'PY'
+import sys
+import xml.etree.ElementTree as ET
+
+path = sys.argv[1]
+try:
+    ET.parse(path)
+    print(f"ALIGNUX: {path} es XML bien formado.")
+except ET.ParseError as e:
+    print(f"ALIGNUX: ERROR — {path} mal formado: {e}", file=sys.stderr)
+    sys.exit(1)
+PY

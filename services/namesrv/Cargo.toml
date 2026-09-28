@@ -1,0 +1,10 @@
+[package]
+name = "namesrv"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+rust-sel4 = { workspace = true }
+
+# Placeholder M0: el servidor de nombres real se implementa en T1-03 (spec S-01).

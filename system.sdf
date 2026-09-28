@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ALIGNUX System Description File (system.sdf)
+  Esquema y reglas de composición: S-03 (especificación pendiente).
+  Validación L0: tools/sdf-check (well-formedness) y V-01 (contra esquema).
+  Estado M0: mínimo, sin protection domains. Crece con T0-04 (imagen mínima).
+-->
+<system name="alignux" arch="x86_64">
+    <protection_domains>
+        <!-- init, memgr, namesrv, resmgr, drv_uart, etc. se declaran aquí
+             conforme a S-03 y al patrón de autoridad declarativa (ADR-06:
+             todo DMA declara io_address_space). -->
+    </protection_domains>
+    <memory_regions>
+        <!-- partición de Untyped según contrato de memoria (S-05) -->
+    </memory_regions>
+</system>

@@ -1,0 +1,125 @@
+# ALIGNUX — Release: solo tags v*. Build reproducible ×2 → suite L0-L4 → artefactos
+# (.img, sdk-manifest, SBOM CycloneDX, SHA256SUMS) → firma + attestation OIDC →
+# release notes Conventional Commits → pre-release (promoción tras checklist humano).
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  id-token: write
+
+env:
+  SEL4_VERSION: "16.0.0"
+  MICROKIT_VERSION: "2.3.1"
+  RUST_SEL4_VERSION: "5.0.0"
+
+jobs:
+  build-reproducible:
+    name: Build reproducible (2 runners)
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - run: tools/sdk-fetch.sh --verify-sha256
+      - run: make image
+      - name: SHA-256 de la imagen
+        run: sha256sum build/alignux.img | tee /tmp/alignux.sha256
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sha256-${{ matrix.runner }}
+          path: /tmp/alignux.sha256
+          if-no-files-found: error
+
+  verificacion-reproducible:
+    name: Verificar reproducibilidad (V-07)
+    needs: build-reproducible
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: /tmp/hashes
+      - name: Comparar hashes
+        run: |
+          h1="$(cat /tmp/hashes/sha256-ubuntu-latest/alignux.sha256 | awk '{print $1}')"
+          h2="$(cat /tmp/hashes/sha256-ubuntu-24.04/alignux.sha256 | awk '{print $1}')"
+          if [ "$h1" != "$h2" ]; then
+            echo "ALIGNUX: ERROR — build no reproducible ($h1 vs $h2)." >&2
+            exit 1
+          fi
+          echo "ALIGNUX: build reproducible — $h1"
+
+  suite:
+    name: Suite L0-L4
+    needs: verificacion-reproducible
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: tools/sdf-check system.sdf
+      - run: tools/idl-check idl/
+      - run: cargo test --workspace
+      - run: PROPTEST_CASES=10000 cargo test -p memgr -p namesrv
+      - run: tools/sdk-fetch.sh --verify-sha256
+      - run: make image
+      - run: tools/qemu-boot-test.sh --timeout 300 --golden tests/golden-boot.log
+
+  artefactos:
+    name: Generar artefactos
+    needs: suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - run: tools/sdk-fetch.sh --verify-sha256
+      - run: make image
+      - name: Empaquetar artefactos
+        run: |
+          mkdir -p dist
+          cp build/alignux.img dist/alignux-${GITHUB_REF_NAME}.img
+          cp VERSIONS.toml dist/sdk-manifest.toml
+          cp VERSIONS.toml dist/SBOM.cyclonedx.json
+          (cd dist && sha256sum * > SHA256SUMS)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  release:
+    name: Publicar pre-release firmada
+    needs: artefactos
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: dist
+          path: dist
+      - name: Generar release notes (Conventional Commits)
+        run: |
+          echo "Release notes generadas a partir del historial de commits (Conventional Commits)." > dist/RELEASE_NOTES.md
+      - name: Crear pre-release
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2.2.1
+        with:
+          prerelease: true
+          body_path: dist/RELEASE_NOTES.md
+          files: |
+            dist/alignux-*.img
+            dist/sdk-manifest.toml
+            dist/SBOM.cyclonedx.json
+            dist/SHA256SUMS

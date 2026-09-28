@@ -14,4 +14,6 @@ mod tests {
     fn placeholder_workspace_is_valid() {
         assert_eq!(2 + 2, 4);
     }
+    #[test]
+    fn badly_formatted(){ assert_eq!(1,1);}
 }

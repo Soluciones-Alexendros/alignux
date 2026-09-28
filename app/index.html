@@ -375,6 +375,7 @@ function renderStatus(data) {
   const pin = data.pin || {};
   const t = data.tasks || {total:0,must:0,should:0,could:0,by_phase:{}};
   document.getElementById('estado-dinamico').innerHTML =
+    '<h3>Estado en vivo</h3>' +
     '<div class="grid g3" style="margin:16px 0">' +
       '<div class="card"><div class="stat">' + (data.phase_current || '—') + '</div><div class="stat-label">fase actual</div></div>' +
       '<div class="card"><div class="stat">' + (t.total || 0) + '</div><div class="stat-label">tareas en backlog</div></div>' +

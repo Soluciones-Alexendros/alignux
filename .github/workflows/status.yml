@@ -48,8 +48,9 @@ jobs:
           node-version: "22"
 
       - name: Build Astro site
+        working-directory: ${{ github.workspace }}/app
         run: |
-          cd app
+          pwd
           ls -la
           npm ci
           npm run build

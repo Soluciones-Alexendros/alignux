@@ -32,24 +32,39 @@ jobs:
           python3 -m json.tool app/status.json > /dev/null
           python3 tools/status-validate.py app/status.json tools/status.schema.json
 
-      - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4
+      - name: Cache npm dependencies
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            ~/.npm
+            app/node_modules
+          key: npm-${{ runner.os }}-${{ hashFiles('app/package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
+
+      - name: Setup Node.js
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4
         with:
           node-version: "22"
-          cache: "npm"
-          cache-dependency-path: "app/package-lock.json"
 
       - name: Build Astro site
-        working-directory: ./app
+        working-directory: ${{ github.workspace }}/app
         run: |
+          pwd
+          ls -la
           npm ci
           npm run build
+
+      - name: Run frontend checks
+        working-directory: ${{ github.workspace }}
+        run: ./tools/check-frontend.sh
 
       - name: Publicar en rama gh-pages
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.github.com"
           mkdir -p .deploy
           cp -r app/dist/. .deploy/
           cp app/CNAME .deploy/CNAME 2>/dev/null || true

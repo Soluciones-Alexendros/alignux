@@ -46,7 +46,7 @@ jobs:
       - name: SHA-256 de la imagen
         if: steps.sdk.outputs.ready == 'true'
         run: sha256sum build/alignux.img | tee /tmp/alignux.sha256
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: steps.sdk.outputs.ready == 'true'
         with:
           name: sha256-${{ matrix.runner }}
@@ -147,7 +147,7 @@ jobs:
           cp VERSIONS.toml dist/sdk-manifest.toml
           cp VERSIONS.toml dist/SBOM.cyclonedx.json
           (cd dist && sha256sum * > SHA256SUMS)
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: steps.sdk.outputs.ready == 'true'
         with:
           name: dist

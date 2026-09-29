@@ -55,12 +55,16 @@ jobs:
           npm ci
           npm run build
 
+      - name: Run frontend checks
+        working-directory: ${{ github.workspace }}
+        run: ./tools/check-frontend.sh
+
       - name: Publicar en rama gh-pages
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.github.com"
           mkdir -p .deploy
           cp -r app/dist/. .deploy/
           cp app/CNAME .deploy/CNAME 2>/dev/null || true

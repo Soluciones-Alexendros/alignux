@@ -65,14 +65,26 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - name: Detectar SDK (pin SHA-256)
+        id: sdk
+        run: |
+          if tools/sdk-fetch.sh --check-ready; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=L3 pendiente (M0)::SDK seL4/Microkit no disponible o SHA-256 sin fijar en VERSIONS.toml; se ejecuta tras T0-02."
+          fi
       - name: Obtener SDK (verifica SHA-256)
+        if: steps.sdk.outputs.ready == 'true'
         run: tools/sdk-fetch.sh --verify-sha256
       - name: Construir imagen
+        if: steps.sdk.outputs.ready == 'true'
         run: make image
       - name: Boot test (golden log)
+        if: steps.sdk.outputs.ready == 'true'
         run: tools/qemu-boot-test.sh --timeout 300 --golden tests/golden-boot.log
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: always()
+        if: always() && steps.sdk.outputs.ready == 'true'
         with:
           name: boot-log
           path: build/boot.log
@@ -85,5 +97,5 @@ jobs:
     steps:
       - name: Consolidación de gate
         run: |
-          echo "L0–L3 ejecutados."
+          echo "L0–L3 evaluados (L3 se omite mientras el SDK siga pendiente de T0-02)."
           echo "Merge sujeto a revisión cruzada (DoD): revisor != autor, criterio demostrado, sin regresión."

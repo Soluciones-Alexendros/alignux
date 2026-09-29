@@ -35,9 +35,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
-          python3 tools/status-export.py --out app/status.json
-          python3 -m json.tool app/status.json > /dev/null
-          python3 tools/status-validate.py app/status.json tools/status.schema.json
+          python3 tools/status-export.py --out app/public/status.json
+          python3 -m json.tool app/public/status.json > /dev/null
+          python3 tools/status-validate.py app/public/status.json tools/status.schema.json
 
       - name: Cache npm dependencies
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4

@@ -35,7 +35,7 @@ ALIGNUX es un sistema operativo de microkernel sobre seL4. El proyecto se ejecut
 
 ### Misión 2 — Dashboard en `alignux.alexendros.dev`
 - **2.1** `status.json` con datos reales + `tools/status-export.py` + `status.yml`. Regla de honestidad: si la API no responde, «datos no disponibles» con fecha del último dato bueno.
-- **2.2** GitHub Pages desde `gh-pages`, DNS CNAME, HTTPS forzado.
+- **2.2** GitHub Pages vía GitHub Actions (`deploy-pages`), DNS CNAME, HTTPS forzado.
 - **2.3** Lighthouse ≥ 95, `status.json` validado contra esquema en CI.
 
 ### Misión 3 — Backlog vivo

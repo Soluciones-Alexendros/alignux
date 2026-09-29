@@ -6,7 +6,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
   group: status-export
@@ -14,6 +16,9 @@ concurrency:
 
 jobs:
   export:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -61,22 +66,14 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: ./tools/check-frontend.sh
 
-      - name: Publicar en rama gh-pages
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.github.com"
-          mkdir -p .deploy
-          cp -r app/dist/. .deploy/
-          cp app/CNAME .deploy/CNAME 2>/dev/null || true
-          git checkout --orphan gh-pages 2>/dev/null || git checkout gh-pages
-          git rm -rf . >/dev/null 2>&1 || true
-          cp -r .deploy/. .
-          git add -A
-          if git diff --cached --quiet; then
-            echo "Sin cambios; no se publica."
-          else
-            git commit -m "chore(status): actualizar status.json + rebuild Astro [skip ci]"
-            git push -f origin gh-pages
-          fi
+      - name: Preparar artefacto (CNAME en raíz)
+        run: cp app/CNAME app/dist/CNAME 2>/dev/null || true
+
+      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+        with:
+          path: app/dist
+
+      - id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
